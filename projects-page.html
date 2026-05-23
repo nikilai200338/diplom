@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Проекты — Voskresensky</title>
+  <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    ul { list-style: none; }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; background: none; border: none; font: inherit; }
+    img { display: block; max-width: 100%; }
+
+    /* ── Tokens (match existing project) ── */
+    :root {
+      --dark:  #191A23;
+      --grey:  #F3F3F3;
+      --green: #B9FF66;
+      --white: #ffffff;
+      --border: rgba(25,26,35,.14);
+      --radius: 12px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 2px 8px rgba(25,26,35,.07);
+      --shadow-md: 0 6px 24px rgba(25,26,35,.10);
+    }
+
+    body {
+      font-family: "Space Grotesk", sans-serif;
+      background: var(--grey);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════
+       HEADER (identical to existing pages)
+    ═══════════════════════════════════════ */
+    .header { padding-block: 30px; background: var(--grey); }
+    .header__container {
+      max-width: 1440px;
+      margin-inline: auto;
+      padding-inline: 40px;
+    }
+    .header__nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header__list {
+      display: flex;
+      gap: 40px;
+    }
+    .header__list-link {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 20px;
+      padding: 3px 6px;
+      border-radius: none;
+      display: inline-block;
+      transition: background-color .2s;
+      color: var(--dark);
+    }
+    .header__list-item.active .header__list-link {
+      background-color: var(--green);
+    }
+    .header__list-item:hover .header__list-link {
+      background-color: var(--dark);
+      color: var(--grey);
+    }
+    .header__button {
+      padding: 10px 20px;
+      background-color: var(--green);
+      color: var(--dark);
+      border: 1px solid var(--dark);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    /* ═══════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════ */
+    .main-container {
+      max-width: 1440px;
+      margin-inline: auto;
+      padding-inline: 40px;
+      padding-block: 40px 80px;
+    }
+
+    /* ═══════════════════════════════════════
+       PAGE HEADER ROW
+    ═══════════════════════════════════════ */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .page-header h1 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 600;
+    }
+    .page-header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* ═══════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 500;
+      transition: opacity .18s, background .18s;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--dark);
+      color: var(--grey);
+      border: 1px solid var(--dark);
+    }
+    .btn-primary:hover { opacity: .82; }
+    .btn-green {
+      background: var(--green);
+      color: var(--dark);
+      border: 1px solid var(--dark);
+    }
+    .btn-green:hover { opacity: .84; }
+    .btn-outline {
+      background: transparent;
+      color: var(--dark);
+      border: 1px solid var(--dark);
+    }
+    .btn-outline:hover { background: var(--dark); color: var(--grey); }
+
+    /* ═══════════════════════════════════════
+       FILTERS & SEARCH ROW
+    ═══════════════════════════════════════ */
+    .filters-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      max-width: 320px;
+      padding: 10px 16px;
+      border: 1px solid var(--dark);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: "Space Grotesk", sans-serif;
+      background: var(--white);
+      color: var(--dark);
+      outline: none;
+      transition: box-shadow .18s;
+    }
+    .search-input:focus { box-shadow: 0 0 0 3px rgba(185,255,102,.55); }
+
+    .filter-select {
+      padding: 10px 16px;
+      border: 1px solid var(--dark);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: "Space Grotesk", sans-serif;
+      background: var(--white);
+      color: var(--dark);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--white);
+      border: 1px solid var(--dark);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .tab-btn {
+      padding: 7px 16px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--dark);
+      transition: background .18s;
+    }
+    .tab-btn.active {
+      background: var(--dark);
+      color: var(--grey);
+    }
+    .tab-btn:hover:not(.active) { background: var(--grey); }
+
+    /* ═══════════════════════════════════════
+       KPI ROW
+    ═══════════════════════════════════════ */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .kpi-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-label {
+      font-size: 13px;
+      color: rgba(25,26,35,.5);
+      margin-bottom: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .kpi-value {
+      font-size: clamp(1.4rem, 2vw, 2rem);
+      font-weight: 700;
+    }
+    .kpi-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--green);
+      color: var(--dark);
+    }
+
+    /* ═══════════════════════════════════════
+       PROJECT CARDS GRID
+    ═══════════════════════════════════════ */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 20px;
+    }
+
+    .project-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s, transform .2s;
+      overflow: hidden;
+    }
+    .project-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .project-card-header {
+      padding: 20px 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .project-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .project-client {
+      font-size: 13px;
+      color: rgba(25,26,35,.5);
+    }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .status-active    { background: var(--green); color: var(--dark); }
+    .status-archive   { background: #e8e8e8; color: rgba(25,26,35,.6); }
+    .status-planned   { background: #191A23; color: #B9FF66; }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .project-card-body { padding: 16px 20px; }
+
+    /* Progress bar */
+    .progress-wrap { margin-bottom: 14px; }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(25,26,35,.5);
+      margin-bottom: 5px;
+    }
+    .progress-bar-track {
+      height: 6px;
+      background: var(--grey);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--green);
+      border: 1.5px solid rgba(0,0,0,.12);
+      border-radius: 10px;
+      transition: width .5s ease;
+    }
+
+    /* Dates & deadline */
+    .project-dates {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: rgba(25,26,35,.55);
+      margin-bottom: 14px;
+    }
+    .project-dates span { display: flex; align-items: center; gap: 4px; }
+    .deadline-near { color: #d9534f; font-weight: 600; }
+
+    /* Team avatars */
+    .team-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .avatars {
+      display: flex;
+    }
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--dark);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--white);
+      margin-left: -6px;
+      cursor: default;
+      transition: transform .15s;
+    }
+    .avatar:first-child { margin-left: 0; }
+    .avatar:hover { transform: scale(1.18) translateY(-2px); z-index: 2; }
+    .avatar-add {
+      background: var(--grey);
+      color: var(--dark);
+      border: 1.5px dashed rgba(25,26,35,.35);
+    }
+
+    .card-actions { display: flex; gap: 6px; }
+    .card-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--dark);
+      color: var(--dark);
+      background: transparent;
+      transition: background .16s;
+    }
+    .card-btn:hover { background: var(--dark); color: var(--grey); }
+    .card-btn-green {
+      background: var(--green);
+      border-color: var(--dark);
+    }
+    .card-btn-green:hover { background: var(--dark); color: var(--grey); }
+
+    /* Equipment chips */
+    .equip-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 20px 16px;
+    }
+    .chip {
+      padding: 3px 10px;
+      background: var(--grey);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: rgba(25,26,35,.7);
+    }
+
+    /* Divider inside card */
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin-inline: 20px;
+      margin-bottom: 14px;
+    }
+
+    /* ═══════════════════════════════════════
+       MODAL OVERLAY
+    ═══════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(25,26,35,.45);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 28px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 { font-size: 22px; font-weight: 600; }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--grey);
+      font-size: 18px;
+      transition: background .15s;
+    }
+    .modal-close:hover { background: var(--dark); color: var(--grey); }
+    .modal-body { padding: 24px 28px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid rgba(25,26,35,.3);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: "Space Grotesk", sans-serif;
+      background: var(--grey);
+      color: var(--dark);
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--dark);
+      box-shadow: 0 0 0 3px rgba(185,255,102,.4);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .modal-footer {
+      padding: 16px 28px 24px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* ═══════════════════════════════════════
+       PROJECT DETAIL PANEL (slide-in)
+    ═══════════════════════════════════════ */
+    .detail-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(25,26,35,.35);
+      backdrop-filter: blur(3px);
+      z-index: 90;
+    }
+    .detail-overlay.open { display: block; }
+
+    .detail-panel {
+      position: fixed;
+      right: -100%;
+      top: 0; bottom: 0;
+      width: min(600px, 100%);
+      background: var(--white);
+      border-left: 1px solid var(--border);
+      box-shadow: -8px 0 32px rgba(25,26,35,.12);
+      z-index: 95;
+      overflow-y: auto;
+      transition: right .32s cubic-bezier(.16,1,.3,1);
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-panel.open { right: 0; }
+
+    .detail-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 28px 28px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .detail-panel-title { font-size: 22px; font-weight: 700; }
+    .detail-panel-sub { font-size: 13px; color: rgba(25,26,35,.5); margin-top: 2px; }
+
+    .detail-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 16px 28px 0;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .detail-tab {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px 6px 0 0;
+      color: rgba(25,26,35,.55);
+      border-bottom: 2px solid transparent;
+      transition: color .15s;
+    }
+    .detail-tab.active {
+      color: var(--dark);
+      border-bottom-color: var(--dark);
+    }
+    .detail-tab:hover:not(.active) { color: var(--dark); }
+
+    .detail-content { padding: 24px 28px; flex: 1; }
+    .detail-section { display: none; }
+    .detail-section.active { display: block; }
+
+    /* Videos grid inside detail */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .video-thumb {
+      aspect-ratio: 16/9;
+      background: var(--grey);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      transition: box-shadow .18s;
+    }
+    .video-thumb:hover { box-shadow: var(--shadow-md); }
+    .video-thumb-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(25,26,35,.72);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+    .video-play-icon {
+      width: 36px; height: 36px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--dark);
+      font-size: 14px;
+      border: 2px solid var(--dark);
+    }
+    .video-add-btn {
+      aspect-ratio: 16/9;
+      border: 1.5px dashed rgba(25,26,35,.3);
+      border-radius: 8px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 4px;
+      font-size: 12px;
+      color: rgba(25,26,35,.45);
+      cursor: pointer;
+      transition: background .16s;
+    }
+    .video-add-btn:hover { background: var(--grey); }
+
+    /* Team list */
+    .team-member-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .team-member-row:last-child { border-bottom: none; }
+    .member-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--dark);
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .member-info { flex: 1; }
+    .member-name { font-weight: 600; font-size: 15px; }
+    .member-role { font-size: 12px; color: rgba(25,26,35,.5); }
+    .member-remove {
+      padding: 4px 10px;
+      border: 1px solid rgba(25,26,35,.25);
+      border-radius: 6px;
+      font-size: 12px;
+      transition: background .15s;
+    }
+    .member-remove:hover { background: #fde8e8; border-color: #d9534f; color: #d9534f; }
+
+    /* Equipment table */
+    .equip-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .equip-table th {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--dark);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: rgba(25,26,35,.5);
+    }
+    .equip-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .equip-table tr:last-child td { border-bottom: none; }
+
+    /* Chat */
+    .chat-wrap { display: flex; flex-direction: column; height: 100%; }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 16px;
+      min-height: 200px;
+      max-height: 340px;
+    }
+    .chat-msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .chat-msg-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--dark);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .chat-msg-bubble {
+      background: var(--grey);
+      border-radius: 0 10px 10px 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      max-width: 80%;
+    }
+    .chat-msg.self .chat-msg-bubble {
+      background: var(--dark);
+      color: var(--grey);
+      border-radius: 10px 0 10px 10px;
+      margin-left: auto;
+    }
+    .chat-msg.self { flex-direction: row-reverse; }
+    .chat-msg-time { font-size: 11px; opacity: .55; margin-top: 3px; }
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid rgba(25,26,35,.25);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: "Space Grotesk", sans-serif;
+      outline: none;
+      transition: border-color .18s;
+    }
+    .chat-input:focus { border-color: var(--dark); }
+    .chat-send {
+      padding: 10px 16px;
+      background: var(--green);
+      border: 1px solid var(--dark);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark);
+      transition: opacity .16s;
+    }
+    .chat-send:hover { opacity: .82; }
+
+    /* Section heading inside panel */
+    .section-heading {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ═══════════════════════════════════════
+       EMPTY STATE
+    ═══════════════════════════════════════ */
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 64px 32px;
+      color: rgba(25,26,35,.45);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { margin-bottom: 20px; font-size: 16px; }
+
+    /* ═══════════════════════════════════════
+       PERIOD RANGE PILL ROW
+    ═══════════════════════════════════════ */
+    .period-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .period-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--dark);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      background: transparent;
+      color: var(--dark);
+      transition: background .16s;
+    }
+    .period-btn.active {
+      background: var(--dark);
+      color: var(--green);
+    }
+    .period-btn:hover:not(.active) { background: var(--grey); }
+
+    /* ═══════════════════════════════════════
+       TOAST NOTIFICATION
+    ═══════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--dark);
+      color: var(--green);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      z-index: 200;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: opacity .24s, transform .24s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .header__container { padding-inline: 20px; }
+      .header__list { gap: 20px; }
+      .header__list-link { font-size: 16px; }
+      .main-container { padding-inline: 20px; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .header__list { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="header">
+  <div class="header__container">
+    <nav class="header__nav">
+      <img class="header__logo" src="img/favicon.svg" alt="Voskresensky logo" width="36" height="36">
+      <ul class="header__list">
+        <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+        <li class="header__list-item active"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
+      </ul>
+      <a class="header__button">Сменить аккаунт</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════ MAIN ═══════ -->
+<main>
+  <div class="main-container">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <h1>Проекты</h1>
+      <div class="page-header-actions">
+        <div class="period-row" id="periodRow">
+          <button class="period-btn active" data-period="all">Все</button>
+          <button class="period-btn" data-period="month">Месяц</button>
+          <button class="period-btn" data-period="quarter">Квартал</button>
+          <button class="period-btn" data-period="year">Год</button>
+        </div>
+        <button class="btn btn-green" onclick="openModal('newProjectModal')">+ Новый проект</button>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">В работе</div>
+        <div class="kpi-value" id="kpiActive">3</div>
+        <div class="kpi-badge">Активные</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Планируется</div>
+        <div class="kpi-value" id="kpiPlanned">2</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Архивных</div>
+        <div class="kpi-value" id="kpiArchive">1</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Дедлайн (ближайший)</div>
+        <div class="kpi-value" style="font-size:1.1rem">20 апр</div>
+        <div class="kpi-badge" style="background:#ffef99">⚡ Скоро</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Оборудования позиций</div>
+        <div class="kpi-value">14</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <input class="search-input" id="searchInput" type="text" placeholder="🔍  Поиск проекта...">
+      <div class="tabs" id="statusTabs">
+        <button class="tab-btn active" data-status="all">Все</button>
+        <button class="tab-btn" data-status="active">В работе</button>
+        <button class="tab-btn" data-status="planned">Планируемые</button>
+        <button class="tab-btn" data-status="archive">Архив</button>
+      </div>
+      <select class="filter-select" id="sortSelect">
+        <option value="date">По дате</option>
+        <option value="name">По названию</option>
+        <option value="progress">По прогрессу</option>
+      </select>
+      <button class="btn btn-outline" onclick="exportProjects()">⬇ Экспорт</button>
+    </div>
+
+    <!-- Projects grid -->
+    <div class="projects-grid" id="projectsGrid">
+      <!-- Cards injected by JS -->
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══════ NEW PROJECT MODAL ═══════ -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newProjectTitle">
+    <div class="modal-header">
+      <h2 id="newProjectTitle">Новый проект</h2>
+      <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Название проекта</label>
+          <input type="text" id="np-name" placeholder="Рекламный ролик…">
+        </div>
+        <div class="form-group">
+          <label>Клиент</label>
+          <input type="text" id="np-client" placeholder="ООО Ромашка">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Статус</label>
+          <select id="np-status">
+            <option value="active">В работе</option>
+            <option value="planned">Планируется</option>
+            <option value="archive">Архив</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Дедлайн</label>
+          <input type="date" id="np-deadline">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Дата начала</label>
+          <input type="date" id="np-start">
+        </div>
+        <div class="form-group">
+          <label>Бюджет (₽)</label>
+          <input type="number" id="np-budget" placeholder="150 000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Описание</label>
+        <textarea id="np-desc" placeholder="Краткое описание задач, пожеланий клиента…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Оборудование (через запятую)</label>
+        <input type="text" id="np-equip" placeholder="Sony FX6, DJI RS3, Rode NT5">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('newProjectModal')">Отмена</button>
+      <button class="btn btn-green" onclick="addProject()">Создать проект</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PROJECT DETAIL PANEL ═══════ -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel" role="complementary">
+  <div class="detail-panel-header">
+    <div>
+      <div class="detail-panel-title" id="dp-title">—</div>
+      <div class="detail-panel-sub" id="dp-sub">—</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="status-badge" id="dp-status-badge">—</span>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+  </div>
+  <!-- Tabs inside panel -->
+  <div class="detail-tabs">
+    <button class="detail-tab active" data-tab="overview">Обзор</button>
+    <button class="detail-tab" data-tab="team">Команда</button>
+    <button class="detail-tab" data-tab="equipment">Оборудование</button>
+    <button class="detail-tab" data-tab="videos">Видео</button>
+    <button class="detail-tab" data-tab="chat">Правки / Чат</button>
+  </div>
+  <div class="detail-content">
+
+    <!-- Overview -->
+    <div class="detail-section active" id="ds-overview">
+      <div class="form-group">
+        <label>Описание проекта</label>
+        <p id="dp-desc" style="font-size:14px;line-height:1.6;color:rgba(25,26,35,.7)">—</p>
+      </div>
+      <div class="form-row" style="margin-bottom:18px">
+        <div>
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:rgba(25,26,35,.45);display:block;margin-bottom:4px">Начало</label>
+          <span id="dp-start" style="font-weight:600">—</span>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:rgba(25,26,35,.45);display:block;margin-bottom:4px">Дедлайн</label>
+          <span id="dp-deadline" style="font-weight:600">—</span>
+        </div>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:rgba(25,26,35,.45);display:block;margin-bottom:6px">Прогресс</label>
+        <div class="progress-bar-track" style="height:10px">
+          <div class="progress-bar-fill" id="dp-progress" style="width:0%"></div>
+        </div>
+        <span id="dp-progress-label" style="font-size:12px;color:rgba(25,26,35,.5);margin-top:4px;display:block">0%</span>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:rgba(25,26,35,.45);display:block;margin-bottom:4px">Бюджет</label>
+        <span id="dp-budget" style="font-size:20px;font-weight:700">—</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:24px">
+        <button class="btn btn-green" onclick="editProgress()">✏ Изменить прогресс</button>
+        <button class="btn btn-outline" onclick="archiveCurrentProject()">Архивировать</button>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="detail-section" id="ds-team">
+      <div class="section-heading">
+        Команда
+        <button class="btn btn-green" style="font-size:13px;padding:6px 14px" onclick="openAddMember()">+ Добавить</button>
+      </div>
+      <div id="team-list"><!-- rendered by JS --></div>
+    </div>
+
+    <!-- Equipment -->
+    <div class="detail-section" id="ds-equipment">
+      <div class="section-heading">
+        Оборудование
+        <button class="btn btn-outline" style="font-size:13px;padding:6px 14px" onclick="openAddEquip()">+ Добавить</button>
+      </div>
+      <table class="equip-table">
+        <thead>
+          <tr>
+            <th>Наименование</th>
+            <th>Кол-во</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody id="equip-tbody"><!-- rendered by JS --></tbody>
+      </table>
+    </div>
+
+    <!-- Videos -->
+    <div class="detail-section" id="ds-videos">
+      <div class="section-heading">
+        Готовые видео
+        <button class="btn btn-green" style="font-size:13px;padding:6px 14px" onclick="openAddVideo()">+ Загрузить</button>
+      </div>
+      <div class="video-grid" id="video-grid"><!-- rendered by JS --></div>
+    </div>
+
+    <!-- Chat -->
+    <div class="detail-section" id="ds-chat">
+      <div class="section-heading">Чат по правкам</div>
+      <div class="chat-wrap">
+        <div class="chat-messages" id="chat-messages"><!-- rendered by JS --></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input-field" placeholder="Напишите правку или комментарий…" onkeydown="if(event.key==='Enter')sendMsg()">
+          <button class="chat-send" onclick="sendMsg()">Отправить</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add Member Mini-Modal -->
+<div class="modal-overlay" id="addMemberModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Добавить участника</h2>
+      <button class="modal-close" onclick="closeModal('addMemberModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Имя</label><input type="text" id="am-name" placeholder="Иван Петров"></div>
+      <div class="form-group"><label>Роль</label><input type="text" id="am-role" placeholder="Оператор, монтажёр…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addMemberModal')">Отмена</button>
+      <button class="btn btn-green" onclick="addMember()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Equipment Mini-Modal -->
+<div class="modal-overlay" id="addEquipModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Добавить оборудование</h2>
+      <button class="modal-close" onclick="closeModal('addEquipModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Название</label><input type="text" id="ae-name" placeholder="Sony FX6"></div>
+      <div class="form-group"><label>Количество</label><input type="number" id="ae-qty" value="1" min="1"></div>
+      <div class="form-group">
+        <label>Статус</label>
+        <select id="ae-status">
+          <option>В наличии</option>
+          <option>Арендовано</option>
+          <option>Нужно купить</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addEquipModal')">Отмена</button>
+      <button class="btn btn-green" onclick="addEquip()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Video Mini-Modal -->
+<div class="modal-overlay" id="addVideoModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Добавить видео</h2>
+      <button class="modal-close" onclick="closeModal('addVideoModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Название</label><input type="text" id="av-title" placeholder="Финальная версия v2"></div>
+      <div class="form-group"><label>Ссылка (YouTube / Яндекс.Диск…)</label><input type="url" id="av-url" placeholder="https://…"></div>
+      <div class="form-group">
+        <label>Версия</label>
+        <select id="av-ver">
+          <option>Черновик</option>
+          <option>Версия для согласования</option>
+          <option>Финальная версия</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addVideoModal')">Отмена</button>
+      <button class="btn btn-green" onclick="addVideo()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Progress Mini-Modal -->
+<div class="modal-overlay" id="editProgressModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <h2>Прогресс</h2>
+      <button class="modal-close" onclick="closeModal('editProgressModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Процент выполнения: <strong id="prog-val-label">50%</strong></label>
+        <input type="range" id="prog-range" min="0" max="100" value="50" oninput="document.getElementById('prog-val-label').textContent=this.value+'%'">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editProgressModal')">Отмена</button>
+      <button class="btn btn-green" onclick="saveProgress()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────
+const projects = [
+  {
+    id: 1, name: 'Рекламный ролик «АвтоМир»', client: 'ООО АвтоМир', status: 'active',
+    start: '2026-03-01', deadline: '2026-04-20', budget: 180000, progress: 65,
+    desc: 'Создание 60-секундного рекламного ролика для TV и YouTube. Съёмки на автодроме и в студии, 3D-графика.',
+    equip: [
+      {name:'Sony FX6', qty:1, status:'В наличии'},
+      {name:'DJI RS3 Pro', qty:2, status:'В наличии'},
+      {name:'Rode NTG3', qty:1, status:'В наличии'},
+      {name:'ARRI Skypanel S60', qty:3, status:'Арендовано'},
+    ],
+    team: [{name:'Николай В.', role:'Режиссёр / Оператор'},{name:'Алексей М.', role:'Монтажёр'},{name:'Дарья С.', role:'Продюсер'}],
+    videos: [{title:'Черновик v1', url:'#', ver:'Черновик'},{title:'Согласование v2', url:'#', ver:'Версия для согласования'}],
+    chat: [{author:'ДС', text:'Клиент просит добавить логотип в первые 5 секунд', time:'09:14', self:false},{author:'Я', text:'Сделаю, добавлю в монтаж сегодня', time:'09:22', self:true}]
+  },
+  {
+    id: 2, name: 'Документалка «Белые ночи»', client: 'Самоиздание', status: 'active',
+    start: '2026-01-10', deadline: '2026-06-01', budget: 0, progress: 30,
+    desc: 'Документальный фильм о Петербурге в период белых ночей. Хронометраж ~40 минут.',
+    equip: [{name:'Sony FX3', qty:1, status:'В наличии'},{name:'Sigma 35mm Art', qty:1, status:'В наличии'}],
+    team: [{name:'Николай В.', role:'Режиссёр / Оператор'}],
+    videos: [],
+    chat: []
+  },
+  {
+    id: 3, name: 'Корпоратив Ростелеком 2026', client: 'Ростелеком', status: 'active',
+    start: '2026-04-01', deadline: '2026-04-30', budget: 95000, progress: 10,
+    desc: 'Видеосъёмка и монтаж корпоративного мероприятия на 300 человек. Мультикамерная съёмка.',
+    equip: [{name:'Sony FX6', qty:2, status:'В наличии'},{name:'PTZ-камера', qty:1, status:'Арендовано'}],
+    team: [{name:'Алексей М.', role:'Оператор'},{name:'Сергей П.', role:'Звукорежиссёр'}],
+    videos: [],
+    chat: [{author:'СП', text:'Подтвердите список оборудования до 10 апреля', time:'Вчера', self:false}]
+  },
+  {
+    id: 4, name: 'Ролик для Яндекс.Такси', client: 'Яндекс', status: 'planned',
+    start: '2026-05-01', deadline: '2026-06-15', budget: 320000, progress: 0,
+    desc: 'Серия из 3 коротких роликов для digital-рекламы. ТЗ в разработке.',
+    equip: [],
+    team: [],
+    videos: [],
+    chat: []
+  },
+  {
+    id: 5, name: 'Свадьба Петровых', client: 'Частный заказ', status: 'planned',
+    start: '2026-07-05', deadline: '2026-08-01', budget: 45000, progress: 0,
+    desc: 'Полный видеоотчёт свадьбы: ceremony, банкет, Love-Story.',
+    equip: [],
+    team: [],
+    videos: [],
+    chat: []
+  },
+  {
+    id: 6, name: 'Промо ЭКСПО 2025', client: 'Выставочный центр', status: 'archive',
+    start: '2025-09-01', deadline: '2025-10-15', budget: 220000, progress: 100,
+    desc: 'Промо-ролики для выставки ЭКСПО 2025. Полностью завершён и сдан.',
+    equip: [{name:'RED Komodo', qty:1, status:'Арендовано'},{name:'DJI Inspire 2', qty:1, status:'Арендовано'}],
+    team: [{name:'Николай В.', role:'Режиссёр'},{name:'Алексей М.', role:'Монтажёр'},{name:'Ольга К.', role:'Художник'}],
+    videos: [{title:'Финал v3', url:'#', ver:'Финальная версия'}],
+    chat: [{author:'ОК', text:'Клиент принял работу, акт подписан!', time:'15.10.25', self:false}]
+  }
+];
+
+let currentFilter = 'all';
+let currentSearch = '';
+let currentSort   = 'date';
+let openProjectId = null;
+
+// ── Render ────────────────────────────────────────────────────────────────
+function renderCards() {
+  const grid = document.getElementById('projectsGrid');
+  let list = projects.filter(p => {
+    const matchStatus = currentFilter === 'all' || p.status === currentFilter;
+    const matchSearch = p.name.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                        p.client.toLowerCase().includes(currentSearch.toLowerCase());
+    return matchStatus && matchSearch;
+  });
+
+  if (currentSort === 'name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  if (currentSort === 'progress') list.sort((a,b)=>b.progress-a.progress);
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📂</div><p>Проекты не найдены</p><button class="btn btn-green" onclick="openModal('newProjectModal')">+ Создать проект</button></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => {
+    const statusMap = {
+      active:  ['status-active',  '● В работе'],
+      planned: ['status-planned', '○ Планируется'],
+      archive: ['status-archive', '✓ Архив'],
+    };
+    const [cls, label] = statusMap[p.status] || [];
+    const initials = str => str.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const teamHtml = p.team.slice(0,4).map(m=>`<div class="avatar" title="${m.name}">${initials(m.name)}</div>`).join('') +
+      `<div class="avatar avatar-add" title="Добавить" onclick="event.stopPropagation();openDetailTab(${p.id},'team')">+</div>`;
+    const equipHtml = p.equip.slice(0,4).map(e=>`<span class="chip">${e.name}</span>`).join('') +
+      (p.equip.length > 4 ? `<span class="chip">+${p.equip.length-4}</span>` : '');
+
+    const today = new Date(), dl = new Date(p.deadline);
+    const daysLeft = Math.ceil((dl-today)/86400000);
+    const dlClass = daysLeft <= 7 && p.status !== 'archive' ? 'deadline-near' : '';
+    const dlLabel = p.status === 'archive' ? `Сдан: ${fmtDate(p.deadline)}` : `Дедлайн: ${fmtDate(p.deadline)} ${daysLeft>=0&&daysLeft<=7?`(через ${daysLeft}д)`:'' }`;
+
+    return `
+    <div class="project-card" onclick="openDetail(${p.id})">
+      <div class="project-card-header">
+        <div>
+          <div class="project-title">${p.name}</div>
+          <div class="project-client">${p.client}</div>
+        </div>
+        <span class="status-badge ${cls}">${label}</span>
+      </div>
+      <div class="project-card-body">
+        <div class="progress-wrap">
+          <div class="progress-meta"><span>Прогресс</span><span>${p.progress}%</span></div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${p.progress}%"></div></div>
+        </div>
+        <div class="project-dates">
+          <span>📅 ${fmtDate(p.start)}</span>
+          <span class="${dlClass}">⏰ ${dlLabel}</span>
+          ${p.budget ? `<span>💰 ${p.budget.toLocaleString('ru')} ₽</span>` : ''}
+        </div>
+        <div class="team-row">
+          <div class="avatars">${teamHtml}</div>
+          <div class="card-actions">
+            <button class="card-btn card-btn-green" onclick="event.stopPropagation();openDetailTab(${p.id},'chat')">Чат</button>
+            <button class="card-btn" onclick="event.stopPropagation();openDetailTab(${p.id},'videos')">Видео</button>
+          </div>
+        </div>
+      </div>
+      ${equipHtml ? `<div class="card-divider"></div><div class="equip-chips">${equipHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Update KPIs
+  document.getElementById('kpiActive').textContent  = projects.filter(p=>p.status==='active').length;
+  document.getElementById('kpiPlanned').textContent = projects.filter(p=>p.status==='planned').length;
+  document.getElementById('kpiArchive').textContent  = projects.filter(p=>p.status==='archive').length;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'});
+}
+
+// ── Detail Panel ──────────────────────────────────────────────────────────
+function openDetail(id, activeTab) {
+  const p = projects.find(x=>x.id===id);
+  if (!p) return;
+  openProjectId = id;
+
+  document.getElementById('dp-title').textContent = p.name;
+  document.getElementById('dp-sub').textContent   = p.client;
+  document.getElementById('dp-desc').textContent  = p.desc || 'Нет описания';
+  document.getElementById('dp-start').textContent    = fmtDate(p.start);
+  document.getElementById('dp-deadline').textContent = fmtDate(p.deadline);
+  document.getElementById('dp-progress').style.width = p.progress + '%';
+  document.getElementById('dp-progress-label').textContent = p.progress + '%';
+  document.getElementById('dp-budget').textContent = p.budget ? p.budget.toLocaleString('ru') + ' ₽' : 'Не указан';
+
+  const statusMap = {active:'status-active В работе', planned:'status-planned Планируется', archive:'status-archive Архив'};
+  const [cls, lbl] = (statusMap[p.status]||'').split(' ');
+  const badge = document.getElementById('dp-status-badge');
+  badge.className = `status-badge ${cls}`;
+  badge.textContent = lbl;
+
+  // Team
+  const teamList = document.getElementById('team-list');
+  teamList.innerHTML = p.team.length === 0
+    ? '<p style="color:rgba(25,26,35,.45);font-size:14px;padding:16px 0">Команда пока не добавлена</p>'
+    : p.team.map((m,i)=>`
+      <div class="team-member-row">
+        <div class="member-avatar">${m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+        <div class="member-info"><div class="member-name">${m.name}</div><div class="member-role">${m.role}</div></div>
+        <button class="member-remove" onclick="removeMember(${id},${i})">Удалить</button>
+      </div>`).join('');
+
+  // Equipment
+  const tbody = document.getElementById('equip-tbody');
+  tbody.innerHTML = p.equip.length === 0
+    ? '<tr><td colspan="3" style="color:rgba(25,26,35,.4);text-align:center;padding:20px">Оборудование не добавлено</td></tr>'
+    : p.equip.map((e,i)=>`<tr><td>${e.name}</td><td>${e.qty}</td><td><span class="chip">${e.status}</span></td></tr>`).join('');
+
+  // Videos
+  const vg = document.getElementById('video-grid');
+  vg.innerHTML = p.videos.map(v=>`
+    <div class="video-thumb" onclick="if('${v.url}'!=='#')window.open('${v.url}','_blank')">
+      <div class="video-play-icon">▶</div>
+      <div class="video-thumb-label">${v.title}</div>
+    </div>`).join('') +
+    `<div class="video-add-btn" onclick="openAddVideo()"><span style="font-size:22px">+</span><span>Добавить</span></div>`;
+
+  // Chat
+  const cm = document.getElementById('chat-messages');
+  cm.innerHTML = p.chat.length === 0
+    ? '<p style="color:rgba(25,26,35,.4);font-size:14px;text-align:center;padding:20px">Пока нет сообщений</p>'
+    : p.chat.map(msg=>`
+      <div class="chat-msg ${msg.self?'self':''}">
+        <div class="chat-msg-avatar">${msg.author}</div>
+        <div>
+          <div class="chat-msg-bubble">${msg.text}</div>
+          <div class="chat-msg-time">${msg.time}</div>
+        </div>
+      </div>`).join('');
+  cm.scrollTop = cm.scrollHeight;
+
+  // Activate tab
+  if (activeTab) switchDetailTab(activeTab);
+  else switchDetailTab('overview');
+
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function openDetailTab(id, tab) {
+  openDetail(id, tab);
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  openProjectId = null;
+}
+
+function switchDetailTab(tab) {
+  document.querySelectorAll('.detail-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('.detail-section').forEach(s => {
+    s.classList.toggle('active', s.id === 'ds-' + tab);
+  });
+}
+
+document.querySelectorAll('.detail-tab').forEach(btn => {
+  btn.addEventListener('click', () => switchDetailTab(btn.dataset.tab));
+});
+
+// ── Add Project ───────────────────────────────────────────────────────────
+function addProject() {
+  const name   = document.getElementById('np-name').value.trim();
+  const client = document.getElementById('np-client').value.trim();
+  if (!name) { showToast('Введите название проекта'); return; }
+  const equip = document.getElementById('np-equip').value
+    .split(',').map(s=>s.trim()).filter(Boolean)
+    .map(e=>({name:e, qty:1, status:'В наличии'}));
+
+  projects.unshift({
+    id: Date.now(),
+    name, client: client||'—',
+    status: document.getElementById('np-status').value,
+    start:    document.getElementById('np-start').value,
+    deadline: document.getElementById('np-deadline').value,
+    budget: +document.getElementById('np-budget').value || 0,
+    desc: document.getElementById('np-desc').value,
+    progress: 0,
+    equip, team: [], videos: [], chat: []
+  });
+
+  closeModal('newProjectModal');
+  renderCards();
+  showToast('Проект создан ✓');
+  // clear
+  ['np-name','np-client','np-budget','np-desc','np-equip','np-start','np-deadline'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+}
+
+// ── Team actions ──────────────────────────────────────────────────────────
+function openAddMember() { openModal('addMemberModal'); }
+
+function addMember() {
+  const name = document.getElementById('am-name').value.trim();
+  const role = document.getElementById('am-role').value.trim();
+  if (!name || !openProjectId) return;
+  const p = projects.find(x=>x.id===openProjectId);
+  p.team.push({name, role: role||'Участник'});
+  closeModal('addMemberModal');
+  openDetail(openProjectId, 'team');
+  renderCards();
+  showToast('Участник добавлен');
+  document.getElementById('am-name').value='';
+  document.getElementById('am-role').value='';
+}
+
+function removeMember(projId, idx) {
+  const p = projects.find(x=>x.id===projId);
+  p.team.splice(idx,1);
+  openDetail(projId,'team');
+  renderCards();
+}
+
+// ── Equipment ─────────────────────────────────────────────────────────────
+function openAddEquip() { openModal('addEquipModal'); }
+
+function addEquip() {
+  const name = document.getElementById('ae-name').value.trim();
+  if (!name || !openProjectId) return;
+  const p = projects.find(x=>x.id===openProjectId);
+  p.equip.push({name, qty:+document.getElementById('ae-qty').value||1, status:document.getElementById('ae-status').value});
+  closeModal('addEquipModal');
+  openDetail(openProjectId,'equipment');
+  renderCards();
+  showToast('Оборудование добавлено');
+  document.getElementById('ae-name').value='';
+}
+
+// ── Videos ────────────────────────────────────────────────────────────────
+function openAddVideo() { openModal('addVideoModal'); }
+
+function addVideo() {
+  const title = document.getElementById('av-title').value.trim();
+  if (!title || !openProjectId) return;
+  const p = projects.find(x=>x.id===openProjectId);
+  p.videos.push({title, url:document.getElementById('av-url').value||'#', ver:document.getElementById('av-ver').value});
+  closeModal('addVideoModal');
+  openDetail(openProjectId,'videos');
+  showToast('Видео добавлено');
+  document.getElementById('av-title').value='';
+  document.getElementById('av-url').value='';
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────
+function sendMsg() {
+  const field = document.getElementById('chat-input-field');
+  const text = field.value.trim();
+  if (!text || !openProjectId) return;
+  const p = projects.find(x=>x.id===openProjectId);
+  const now = new Date();
+  p.chat.push({author:'Я', text, time:`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`, self:true});
+  field.value='';
+  // re-render chat
+  const cm = document.getElementById('chat-messages');
+  cm.innerHTML = p.chat.map(msg=>`
+    <div class="chat-msg ${msg.self?'self':''}">
+      <div class="chat-msg-avatar">${msg.author}</div>
+      <div>
+        <div class="chat-msg-bubble">${msg.text}</div>
+        <div class="chat-msg-time">${msg.time}</div>
+      </div>
+    </div>`).join('');
+  cm.scrollTop = cm.scrollHeight;
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────
+function editProgress() {
+  if (!openProjectId) return;
+  const p = projects.find(x=>x.id===openProjectId);
+  document.getElementById('prog-range').value = p.progress;
+  document.getElementById('prog-val-label').textContent = p.progress + '%';
+  openModal('editProgressModal');
+}
+
+function saveProgress() {
+  const val = +document.getElementById('prog-range').value;
+  const p = projects.find(x=>x.id===openProjectId);
+  p.progress = val;
+  closeModal('editProgressModal');
+  openDetail(openProjectId,'overview');
+  renderCards();
+  showToast('Прогресс обновлён');
+}
+
+// ── Archive ───────────────────────────────────────────────────────────────
+function archiveCurrentProject() {
+  if (!openProjectId) return;
+  const p = projects.find(x=>x.id===openProjectId);
+  p.status = 'archive';
+  closeDetail();
+  renderCards();
+  showToast('Проект архивирован');
+}
+
+// ── Export ────────────────────────────────────────────────────────────────
+function exportProjects() {
+  const rows = [['Название','Клиент','Статус','Начало','Дедлайн','Прогресс','Бюджет']];
+  projects.forEach(p=>rows.push([p.name,p.client,p.status,p.start,p.deadline,p.progress+'%',p.budget]));
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'projects.csv';
+  a.click();
+  showToast('Экспорт завершён');
+}
+
+// ── Modals ────────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+// ── Filters ───────────────────────────────────────────────────────────────
+document.getElementById('statusTabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('#statusTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.status;
+  renderCards();
+});
+
+document.getElementById('searchInput').addEventListener('input', e=>{
+  currentSearch = e.target.value;
+  renderCards();
+});
+
+document.getElementById('sortSelect').addEventListener('change', e=>{
+  currentSort = e.target.value;
+  renderCards();
+});
+
+document.getElementById('periodRow').addEventListener('click', e=>{
+  const btn = e.target.closest('.period-btn');
+  if (!btn) return;
+  document.querySelectorAll('#periodRow .period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showToast('Период: ' + btn.textContent);
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if (e.key==='Escape') {
+    closeDetail();
+    document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderCards();
+</script>
+</body>
+</html>
