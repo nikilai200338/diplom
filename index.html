@@ -1,429 +1,119 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voskresensky</title>
+  <title>Главная — Voskresensky</title>
   <link rel="stylesheet" href="style.css">
   <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400..900&family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&family=Unbounded:wght@400..900&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body>
-
-<header class="header">
-  <div class="header__container">
-    <nav class="header__nav">
-      <img src="img/favicon.svg" alt="" width="36" height="36">
-      <ul class="header__list">
-        <li class="header__list-item active">
-          <a class="header__list-link" href="index.html">Главная</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="performers.html">Исполнители</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="calendar.html">Календарь</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="projects-page.html">Проекты</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="finances.html">Финансы</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="map.html">Карта</a></li>
-      </ul>
-      <a class="header__button" href="login.html">Сменить аккаунт</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero__container">
-      <div class="hero__content">
-        <h1 class="hero__title">Николай, добро пожаловать!</h1>
-        <p class="hero__subtitle">Сегодня <strong id="today-date"></strong> — вот что важно прямо сейчас.</p>
-        <button class="hero__button" onclick="window.location.href='projects-page.html'">Открыть проекты</button>
-      </div>
-      <div class="hero__image">
-        <img src="img/hero_Illustration.png" alt="Megaphone illustration">
-      </div>
+<body data-page="dashboard">
+  <header class="header">
+    <div class="header__container">
+      <nav class="header__nav">
+        <a href="index.html"><img src="img/favicon.svg" alt="Voskresensky" width="36" height="36"></a>
+        <ul class="header__list">
+          <li class="header__list-item active"><a class="header__list-link" href="index.html">Главная</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
+        </ul>
+        <a class="header__button" href="login.html">Сменить аккаунт</a>
+      </nav>
     </div>
-  </section>
+  </header>
 
-  <!-- DASHBOARD -->
-  <section class="dashboard">
-    <div class="dashboard__container">
-
-      <!-- KPI -->
+  <main class="app-shell">
+    <section class="hero">
       <div>
-        <span class="section-label">📊 Обзор</span>
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-card__icon">🎬</div>
-            <div class="kpi-card__value">7</div>
-            <div class="kpi-card__label">Активных проектов</div>
-            <span class="kpi-card__badge">+2 за месяц</span>
+        <h1>Рабочий центр видеопроизводства</h1>
+        <p>Проекты, исполнители, дедлайны, финансы, документы, карта съёмок и общий чат в одном интерфейсе.</p>
+        <div class="hero-actions">
+          <button class="btn btn--green" data-action="open-project-create">Добавить проект</button>
+          <a class="btn btn--dark" href="calendar.html">Открыть календарь</a>
+        </div>
+      </div>
+      <img src="img/hero_Illustration.png" alt="Иллюстрация продакшена">
+    </section>
+
+    <section id="dashboard-kpis" class="grid grid--4"></section>
+
+    <section class="layout-main" style="margin-top:18px">
+      <div class="grid">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Активные проекты</h2>
+              <p class="section-note">Карточки ведут на рабочую страницу проектов.</p>
+            </div>
+            <a class="btn btn--ghost" href="projects-page.html">Все проекты</a>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-card__icon">⏰</div>
-            <div class="kpi-card__value">3</div>
-            <div class="kpi-card__label">Дедлайнов на этой неделе</div>
-            <span class="kpi-card__badge warn">Срочно</span>
+          <div id="dashboard-projects" class="grid grid--2"></div>
+        </div>
+
+        <div class="grid grid--2">
+          <div class="panel">
+            <div class="section-head">
+              <h2 class="section-title">Ближайшие задачи</h2>
+              <a class="btn btn--ghost" href="calendar.html">Календарь</a>
+            </div>
+            <div id="dashboard-events" class="list"></div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-card__icon">💰</div>
-            <div class="kpi-card__value">₽480k</div>
-            <div class="kpi-card__label">Доход в апреле</div>
-            <span class="kpi-card__badge">80% от плана</span>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-card__icon">👥</div>
-            <div class="kpi-card__value">6</div>
-            <div class="kpi-card__label">Исполнителей в работе</div>
-            <span class="kpi-card__badge danger">1 занят</span>
+          <div class="panel">
+            <div class="section-head">
+              <h2 class="section-title">Финансовая сводка</h2>
+              <a class="btn btn--ghost" href="finances.html">Финансы</a>
+            </div>
+            <div id="dashboard-finance" class="list"></div>
           </div>
         </div>
       </div>
 
-      <!-- DEADLINES + TASKS -->
-      <div class="two-col">
-
-        <div class="card">
-          <div class="card__title">⏳ Ближайшие дедлайны</div>
-          <div class="deadline-list">
-            <div class="deadline-item">
-              <div>
-                <div class="deadline-item__name">Корпоратив Газпром</div>
-                <div class="deadline-item__client">Клиент: ООО «Газпром Медиа»</div>
-              </div>
-              <span class="deadline-item__date urgent">9 апр</span>
-            </div>
-            <div class="deadline-item">
-              <div>
-                <div class="deadline-item__name">Монтаж ролика VEKA</div>
-                <div class="deadline-item__client">Клиент: VEKA Rus</div>
-              </div>
-              <span class="deadline-item__date soon">12 апр</span>
-            </div>
-            <div class="deadline-item">
-              <div>
-                <div class="deadline-item__name">Тизер нового продукта</div>
-                <div class="deadline-item__client">Клиент: StartupX</div>
-              </div>
-              <span class="deadline-item__date">19 апр</span>
-            </div>
-            <div class="deadline-item">
-              <div>
-                <div class="deadline-item__name">YouTube-серия (эп. 3)</div>
-                <div class="deadline-item__client">Клиент: AutoBlog Studio</div>
-              </div>
-              <span class="deadline-item__date">25 апр</span>
-            </div>
+      <aside class="grid">
+        <div class="panel">
+          <div class="section-head">
+            <h2 class="section-title">Быстрые действия</h2>
+          </div>
+          <div class="grid">
+            <button class="btn btn--green" data-action="open-project-create">Добавить проект</button>
+            <button class="btn" data-action="open-performer-create">Добавить исполнителя</button>
+            <button class="btn" data-action="open-expense-create">Добавить расход</button>
+            <a class="btn btn--ghost" href="map.html">Карта съёмок</a>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card__title">✅ Задачи на сегодня</div>
-          <div class="task-list" id="task-list">
-            <label class="task-item">
-              <input type="checkbox">
-              <span class="task-item__text">Утвердить монтаж у клиента по VEKA</span>
-              <span class="task-item__tag tag-client">Клиент</span>
-            </label>
-            <label class="task-item">
-              <input type="checkbox">
-              <span class="task-item__text">Цветокоррекция 3-го эпизода</span>
-              <span class="task-item__tag tag-edit">Монтаж</span>
-            </label>
-            <label class="task-item">
-              <input type="checkbox">
-              <span class="task-item__text">Съёмка b-roll для тизера StartupX</span>
-              <span class="task-item__tag tag-shoot">Съёмка</span>
-            </label>
-            <label class="task-item">
-              <input type="checkbox">
-              <span class="task-item__text">Выставить счёт Газпром Медиа</span>
-              <span class="task-item__tag tag-client">Финансы</span>
-            </label>
+        <div class="panel">
+          <div class="section-head">
+            <h2 class="section-title">Исполнители в работе</h2>
+            <a class="btn btn--ghost" href="performers.html">Список</a>
           </div>
-          <div class="task-add">
-            <input type="text" id="new-task-input" placeholder="Добавить задачу...">
-            <button onclick="addTask()">+ Добавить</button>
-          </div>
+          <div id="dashboard-performers" class="list"></div>
         </div>
 
-      </div>
-
-      <!-- QUICK ACTIONS -->
-      <div>
-        <span class="section-label">⚡ Быстрые действия</span>
-        <div class="quick-actions">
-          <a class="qa-btn" href="projects-page.html">
-            <span class="qa-btn__icon">🎬</span>
-            Новый проект
-          </a>
-          <a class="qa-btn" href="performers.html">
-            <span class="qa-btn__icon">👤</span>
-            Добавить исполнителя
-          </a>
-          <a class="qa-btn" href="finances.html">
-            <span class="qa-btn__icon">🧾</span>
-            Выставить счёт
-          </a>
-          <a class="qa-btn" href="calendar.html">
-            <span class="qa-btn__icon">📅</span>
-            Запланировать съёмку
-          </a>
-        </div>
-      </div>
-
-      <!-- CALENDAR + FINANCES -->
-      <div class="two-col">
-
-        <div class="card">
-          <div class="card__title">📅 Ближайшие события</div>
-          <div class="mini-cal">
-            <div class="mini-cal__event">
-              <div class="mini-cal__date">
-                <span class="mini-cal__day">9</span>
-                <span class="mini-cal__month">апр</span>
-              </div>
-              <div class="mini-cal__info">
-                <div class="mini-cal__event-name">Съёмка Газпром Корпоратив</div>
-                <div class="mini-cal__event-sub">Оператор: Алексей · Локация: БЦ «Сенатор»</div>
-              </div>
-              <span class="mini-cal__time">10:00</span>
-            </div>
-            <div class="mini-cal__event">
-              <div class="mini-cal__date">
-                <span class="mini-cal__day">11</span>
-                <span class="mini-cal__month">апр</span>
-              </div>
-              <div class="mini-cal__info">
-                <div class="mini-cal__event-name">Зум с клиентом VEKA</div>
-                <div class="mini-cal__event-sub">Согласование финального монтажа</div>
-              </div>
-              <span class="mini-cal__time">14:30</span>
-            </div>
-            <div class="mini-cal__event">
-              <div class="mini-cal__date">
-                <span class="mini-cal__day">15</span>
-                <span class="mini-cal__month">апр</span>
-              </div>
-              <div class="mini-cal__info">
-                <div class="mini-cal__event-name">Съёмка b-roll StartupX</div>
-                <div class="mini-cal__event-sub">Оператор: Дмитрий · Пространство Голицын</div>
-              </div>
-              <span class="mini-cal__time">09:00</span>
-            </div>
+        <div class="panel">
+          <div class="section-head">
+            <h2 class="section-title">Уведомления</h2>
           </div>
+          <div id="dashboard-notifications" class="list"></div>
         </div>
 
-        <div class="card">
-          <div class="card__title">💰 Финансы апреля</div>
-          <div class="finance-row">
-            <span class="finance-row__label">Доход (факт)</span>
-            <span class="finance-row__value income">₽480 000</span>
+        <div class="panel">
+          <div class="section-head">
+            <h2 class="section-title">Общий чат</h2>
           </div>
-          <div class="finance-row">
-            <span class="finance-row__label">Доход (план)</span>
-            <span class="finance-row__value">₽600 000</span>
-          </div>
-          <div class="finance-row">
-            <span class="finance-row__label">Расходы</span>
-            <span class="finance-row__value expense">−₽142 000</span>
-          </div>
-          <div class="finance-row">
-            <span class="finance-row__label">Прибыль</span>
-            <span class="finance-row__value income">₽338 000</span>
-          </div>
-          <div class="finance-row">
-            <span class="finance-row__label">Ожидает оплаты</span>
-            <span class="finance-row__value warn" style="color:#c08000;">₽210 000</span>
-          </div>
-          <div class="finance-bar">
-            <div class="finance-bar__fill" style="width: 80%;"></div>
-          </div>
-          <div class="finance-bar__label">80% от плана выполнено</div>
+          <div id="global-chat" class="chat"></div>
         </div>
+      </aside>
+    </section>
+  </main>
 
-      </div>
-
-      <!-- TEAM + NOTES -->
-      <div class="two-col">
-
-        <div class="card">
-          <div class="card__title">👥 Команда</div>
-          <div class="performer-grid">
-            <div class="performer-chip">
-              <div class="performer-chip__avatar">АК</div>
-              <div>
-                <div class="performer-chip__name">Алексей К.</div>
-                <div class="performer-chip__role">Оператор</div>
-              </div>
-              <div class="performer-chip__status online"></div>
-            </div>
-            <div class="performer-chip">
-              <div class="performer-chip__avatar">ДМ</div>
-              <div>
-                <div class="performer-chip__name">Дмитрий М.</div>
-                <div class="performer-chip__role">Монтажёр</div>
-              </div>
-              <div class="performer-chip__status busy"></div>
-            </div>
-            <div class="performer-chip">
-              <div class="performer-chip__avatar">СВ</div>
-              <div>
-                <div class="performer-chip__name">Светлана В.</div>
-                <div class="performer-chip__role">Менеджер</div>
-              </div>
-              <div class="performer-chip__status online"></div>
-            </div>
-            <div class="performer-chip">
-              <div class="performer-chip__avatar">ИР</div>
-              <div>
-                <div class="performer-chip__name">Илья Р.</div>
-                <div class="performer-chip__role">Звукорежиссёр</div>
-              </div>
-              <div class="performer-chip__status"></div>
-            </div>
-            <div class="performer-chip">
-              <div class="performer-chip__avatar">НП</div>
-              <div>
-                <div class="performer-chip__name">Наташа П.</div>
-                <div class="performer-chip__role">Сценарист</div>
-              </div>
-              <div class="performer-chip__status online"></div>
-            </div>
-            <div class="performer-chip">
-              <div class="performer-chip__avatar">ЕГ</div>
-              <div>
-                <div class="performer-chip__name">Егор Г.</div>
-                <div class="performer-chip__role">Колорист</div>
-              </div>
-              <div class="performer-chip__status busy"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card__title">📝 Заметки</div>
-          <textarea class="notes-area" id="notes-area" placeholder="Запишите мысли, идеи, правки от клиентов..."></textarea>
-          <button class="notes-save" onclick="saveNotes()">Сохранить</button>
-        </div>
-
-      </div>
-
-      <!-- TEAM CHAT -->
-      <div class="card">
-        <div class="card__title">💬 Чат с командой</div>
-        <div class="chat-wrapper">
-          <div class="chat-messages" id="chat-messages">
-            <div class="msg">
-              <div class="msg__avatar">АК</div>
-              <div>
-                <div class="msg__bubble">Николай, отснял весь материал по Газпрому. Заливаю на диск сейчас.</div>
-                <div class="msg__meta">Алексей К. · 11:24</div>
-              </div>
-            </div>
-            <div class="msg msg--me">
-              <div class="msg__avatar">НВ</div>
-              <div>
-                <div class="msg__bubble">Отлично! Как зальёшь — кинь ссылку Дмитрию, пусть начинает черновой монтаж.</div>
-                <div class="msg__meta">Вы · 11:31</div>
-              </div>
-            </div>
-            <div class="msg">
-              <div class="msg__avatar">ДМ</div>
-              <div>
-                <div class="msg__bubble">Понял, жду материал. Сегодня начну. По VEKA — правки клиента уже внёс, можно на согласование.</div>
-                <div class="msg__meta">Дмитрий М. · 12:05</div>
-              </div>
-            </div>
-            <div class="msg">
-              <div class="msg__avatar">СВ</div>
-              <div>
-                <div class="msg__bubble">Напоминаю: счёт Газпром Медиа ещё не выставлен. Нужно до конца дня.</div>
-                <div class="msg__meta">Светлана В. · 13:47</div>
-              </div>
-            </div>
-          </div>
-          <div class="chat-input-row">
-            <select id="chat-sender">
-              <option value="Вы">Вы (Николай)</option>
-              <option value="АК">Алексей К.</option>
-              <option value="ДМ">Дмитрий М.</option>
-              <option value="СВ">Светлана В.</option>
-            </select>
-            <input type="text" id="chat-input" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()">Отправить</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-</main>
-
-<script>
-  // Today's date
-  const now = new Date();
-  document.getElementById('today-date').textContent = now.toLocaleDateString('ru-RU', {
-    weekday: 'long', day: 'numeric', month: 'long'
-  });
-
-  // Tasks
-  function addTask() {
-    const input = document.getElementById('new-task-input');
-    const text = input.value.trim();
-    if (!text) return;
-    const label = document.createElement('label');
-    label.className = 'task-item';
-    label.innerHTML = `<input type="checkbox"><span class="task-item__text">${text}</span>`;
-    document.getElementById('task-list').appendChild(label);
-    input.value = '';
-  }
-
-  // Notes persistence
-  const notesArea = document.getElementById('notes-area');
-  notesArea.value = localStorage.getItem('vos_notes') || '';
-  function saveNotes() {
-    localStorage.setItem('vos_notes', notesArea.value);
-    const btn = document.querySelector('.notes-save');
-    btn.textContent = 'Сохранено ✓';
-    setTimeout(() => btn.textContent = 'Сохранить', 1500);
-  }
-
-  // Chat
-  const avatarMap = { 'Вы': 'НВ', 'АК': 'АК', 'ДМ': 'ДМ', 'СВ': 'СВ' };
-  const nameMap  = { 'Вы': 'Вы', 'АК': 'Алексей К.', 'ДМ': 'Дмитрий М.', 'СВ': 'Светлана В.' };
-
-  function sendMessage() {
-    const input  = document.getElementById('chat-input');
-    const sender = document.getElementById('chat-sender').value;
-    const text   = input.value.trim();
-    if (!text) return;
-
-    const isMe = sender === 'Вы';
-    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
-    const msg = document.createElement('div');
-    msg.className = 'msg' + (isMe ? ' msg--me' : '');
-    msg.innerHTML = `
-      <div class="msg__avatar">${avatarMap[sender]}</div>
-      <div>
-        <div class="msg__bubble">${text}</div>
-        <div class="msg__meta">${nameMap[sender]} · ${time}</div>
-      </div>`;
-
-    const container = document.getElementById('chat-messages');
-    container.appendChild(msg);
-    container.scrollTop = container.scrollHeight;
-    input.value = '';
-  }
-</script>
-
+  <div id="app-modal" class="modal" aria-hidden="true"></div>
 </body>
 </html>

@@ -3,370 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voskresensky — Календарь</title>
+  <title>Календарь — Voskresensky</title>
   <link rel="stylesheet" href="style.css">
   <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400..900&family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&family=Unbounded:wght@400..900&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body>
-
-<header class="header">
-  <div class="header__container">
-    <nav class="header__nav">
-      <img src="img/favicon.svg" alt="" width="36" height="36">
-      <ul class="header__list">
-        <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
-        <li class="header__list-item active"><a class="header__list-link" href="calendar.html">Календарь</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
-      </ul>
-      <a class="header__button">Сменить аккаунт</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-  <div class="calendar-page">
-
-    <!-- ── SIDEBAR ── -->
-    <aside class="sidebar">
-
-      <div class="mini-cal" id="miniCal">
-        <div class="mini-cal__nav">
-          <button id="prevMonth">&#8249;</button>
-          <span class="mini-cal__month" id="miniCalTitle"></span>
-          <button id="nextMonth">&#8250;</button>
-        </div>
-        <div class="mini-cal__grid" id="miniCalGrid"></div>
-      </div>
-
-      <div class="add-task">
-        <div class="add-task__title">Новая задача</div>
-        <form class="add-task__form" id="addTaskForm" onsubmit="return false;">
-          <input class="add-task__input" id="taskName" placeholder="Название задачи…" autocomplete="off" required>
-          <div class="add-task__row">
-            <input class="add-task__input" id="taskTime" type="time" value="10:00">
-            <select class="add-task__select" id="taskTag">
-              <option value="green">🟢 Проект</option>
-              <option value="dark">⚫ Дедлайн</option>
-              <option value="accent">🟣 Встреча</option>
-              <option value="grey">⬜ Личное</option>
-            </select>
-          </div>
-          <button class="add-task__btn" type="submit" id="addTaskBtn">+ Добавить</button>
-        </form>
-      </div>
-
-      <div class="filter-tags" id="filterTags">
-        <span class="filter-tag active" data-filter="all">Все</span>
-        <span class="filter-tag" data-filter="green">Проекты</span>
-        <span class="filter-tag" data-filter="dark">Дедлайны</span>
-        <span class="filter-tag" data-filter="accent">Встречи</span>
-        <span class="filter-tag" data-filter="grey">Личное</span>
-      </div>
-    </aside>
-
-    <!-- ── MAIN PANEL ── -->
-    <section class="main-panel">
-      <div class="main-panel__header">
-        <div class="main-panel__date" id="mainPanelDate"></div>
-        <div class="view-switch">
-          <button class="view-switch__btn active" data-view="day" id="btnDay">День</button>
-          <button class="view-switch__btn" data-view="week" id="btnWeek">Неделя</button>
-        </div>
-      </div>
-
-      <!-- DAY VIEW -->
-      <div class="day-view" id="dayView">
-        <div class="day-view__timeline" id="timeline"></div>
-        <div class="upcoming-section">
-          <div class="upcoming-section__title">Все задачи на день</div>
-          <div class="task-list" id="taskList"></div>
-        </div>
-      </div>
-
-      <!-- WEEK VIEW -->
-      <div class="week-view" id="weekView">
-        <div class="week-view__grid" id="weekGrid"></div>
-      </div>
-
-    </section>
-  </div>
-</main>
-
-<div class="toast" id="toast"></div>
-
-<script>
-// ───────────────────── STATE ─────────────────────
-const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const DAYS_RU   = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-const DAYS_FULL = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
-
-const today = new Date();
-let curYear  = today.getFullYear();
-let curMonth = today.getMonth();
-let selectedDate = new Date(today);
-let currentView  = 'day';
-let activeFilter = 'all';
-
-// Sample seed tasks
-let tasks = [
-  { id: 1, date: fmtDate(today), time: '09:00', name: 'Созвон с командой', tag: 'accent', done: false },
-  { id: 2, date: fmtDate(today), time: '11:30', name: 'Сдать видео-монтаж', tag: 'dark',  done: false },
-  { id: 3, date: fmtDate(today), time: '14:00', name: 'Съёмка для YouTube', tag: 'green', done: false },
-  { id: 4, date: fmtDate(today), time: '17:00', name: 'Ответить на комментарии', tag: 'grey', done: true },
-  { id: 5, date: fmtDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()+1)), time: '10:00', name: 'Монтаж ролика', tag: 'green', done: false },
-];
-
-let nextId = 6;
-
-// ───────────────────── HELPERS ─────────────────────
-function fmtDate(d) { return d.toISOString().slice(0,10); }
-function parseDate(s) { const [y,m,d]=s.split('-'); return new Date(+y,+m-1,+d); }
-function sameDay(a,b){ return fmtDate(a)===fmtDate(b); }
-function padZ(n){ return String(n).padStart(2,'0'); }
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2000);
-}
-
-// ───────────────────── MINI CALENDAR ─────────────────────
-function renderMiniCal(){
-  const title = document.getElementById('miniCalTitle');
-  const grid  = document.getElementById('miniCalGrid');
-  title.textContent = MONTHS_RU[curMonth] + ' ' + curYear;
-
-  // day labels
-  let html = DAYS_RU.map(d=>`<div class="mini-cal__cell mini-cal__cell--head">${d}</div>`).join('');
-
-  const first = new Date(curYear, curMonth, 1);
-  const last  = new Date(curYear, curMonth+1, 0);
-  let startDow = first.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
-
-  // prev month padding
-  for(let i=0;i<startDow;i++){
-    const d = new Date(curYear, curMonth, -startDow+1+i);
-    html += `<div class="mini-cal__cell mini-cal__cell--other">${d.getDate()}</div>`;
-  }
-  // current month
-  const taskDates = new Set(tasks.map(t=>t.date));
-  for(let d=1;d<=last.getDate();d++){
-    const dt = new Date(curYear,curMonth,d);
-    const ds = fmtDate(dt);
-    let cls = 'mini-cal__cell';
-    if(sameDay(dt,today)) cls += ' mini-cal__cell--today';
-    if(sameDay(dt,selectedDate)) cls += ' mini-cal__cell--selected';
-    if(taskDates.has(ds)) cls += ' mini-cal__cell--has-task';
-    html += `<div class="${cls}" data-date="${ds}">${d}</div>`;
-  }
-
-  // fill to complete last row
-  const filled = startDow + last.getDate();
-  const rem = filled % 7 === 0 ? 0 : 7 - (filled%7);
-  for(let i=1;i<=rem;i++){
-    html += `<div class="mini-cal__cell mini-cal__cell--other">${i}</div>`;
-  }
-
-  grid.innerHTML = html;
-
-  // click handlers
-  grid.querySelectorAll('[data-date]').forEach(el=>{
-    el.addEventListener('click',()=>{
-      selectedDate = parseDate(el.dataset.date);
-      renderAll();
-    });
-  });
-}
-
-document.getElementById('prevMonth').addEventListener('click',()=>{
-  curMonth--; if(curMonth<0){curMonth=11;curYear--;} renderMiniCal();
-});
-document.getElementById('nextMonth').addEventListener('click',()=>{
-  curMonth++; if(curMonth>11){curMonth=0;curYear++;} renderMiniCal();
-});
-
-// ───────────────────── DAY HEADER ─────────────────────
-function renderDayHeader(){
-  const dow = selectedDate.getDay();
-  const dowIdx = dow===0?6:dow-1;
-  const d = document.getElementById('mainPanelDate');
-  d.textContent = DAYS_FULL[dowIdx] + ', ' + selectedDate.getDate() + ' ' + MONTHS_RU[selectedDate.getMonth()];
-}
-
-// ───────────────────── TIMELINE ─────────────────────
-function renderTimeline(){
-  const ds = fmtDate(selectedDate);
-  const dayTasks = tasks.filter(t => t.date === ds && (activeFilter==='all'||t.tag===activeFilter));
-  const tl = document.getElementById('timeline');
-
-  const HOURS = Array.from({length:14},(_,i)=>i+8); // 08–21
-
-  let html = '';
-  HOURS.forEach(h=>{
-    const label = padZ(h)+':00';
-    const slotTasks = dayTasks.filter(t=>{
-      const th = parseInt(t.time.split(':')[0]);
-      return th === h;
-    });
-    let tasksHtml = slotTasks.map(t=>`
-      <div class="task-card task-card--${t.tag}" style="position:relative;margin:3px 0;" data-id="${t.id}">
-        <button class="task-card__del" data-del="${t.id}">✕</button>
-        <div class="task-card__time">${t.time}</div>
-        <div>${t.name}</div>
-      </div>
-    `).join('');
-    html += `<div class="time-row">
-      <div class="time-label">${label}</div>
-      <div class="time-slot">${tasksHtml}</div>
-    </div>`;
-  });
-
-  tl.innerHTML = html;
-
-  tl.querySelectorAll('[data-del]').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const id=+btn.dataset.del;
-      tasks=tasks.filter(t=>t.id!==id);
-      showToast('Задача удалена');
-      renderAll();
-    });
-  });
-}
-
-// ───────────────────── TASK LIST ─────────────────────
-function renderTaskList(){
-  const ds = fmtDate(selectedDate);
-  let dayTasks = tasks.filter(t => t.date === ds && (activeFilter==='all'||t.tag===activeFilter));
-  const list = document.getElementById('taskList');
-
-  if(dayTasks.length===0){
-    list.innerHTML = `<div class="empty-day">
-      <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#191A23" stroke-width="1.2">
-        <rect x="3" y="4" width="18" height="18" rx="3"/>
-        <path d="M16 2v4M8 2v4M3 10h18"/>
-      </svg>
-      Задач на этот день нет
-    </div>`;
-    return;
-  }
-
-  const tagLabel = {green:'Проект', dark:'Дедлайн', accent:'Встреча', grey:'Личное'};
-  list.innerHTML = dayTasks.map(t=>`
-    <div class="task-list-item ${t.done?'done':''}" data-id="${t.id}">
-      <div class="task-list-item__check" data-check="${t.id}">
-        ${t.done?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
-      </div>
-      <span class="task-list-item__name">${t.name}</span>
-      <span class="task-list-item__meta">${t.time}</span>
-      <span class="badge badge--${t.tag}">${tagLabel[t.tag]}</span>
+<body data-page="calendar">
+  <header class="header">
+    <div class="header__container">
+      <nav class="header__nav">
+        <a href="index.html"><img src="img/favicon.svg" alt="Voskresensky" width="36" height="36"></a>
+        <ul class="header__list">
+          <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+          <li class="header__list-item active"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
+        </ul>
+        <a class="header__button" href="login.html">Сменить аккаунт</a>
+      </nav>
     </div>
-  `).join('');
+  </header>
 
-  list.querySelectorAll('[data-check]').forEach(el=>{
-    el.addEventListener('click',e=>{
-      e.stopPropagation();
-      const id=+el.dataset.check;
-      const task=tasks.find(t=>t.id===id);
-      if(task){ task.done=!task.done; renderAll(); }
-    });
-  });
-}
+  <main class="app-shell">
+    <section class="page-top">
+      <div>
+        <h1 class="page-title">Календарь</h1>
+        <p class="page-subtitle">День, неделя, месяц, задачи по времени, календари исполнителей и автоматические дедлайны проектов.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn--green" data-action="open-event-create">Добавить событие</button>
+      </div>
+    </section>
 
-// ───────────────────── WEEK VIEW ─────────────────────
-function renderWeekView(){
-  const grid = document.getElementById('weekGrid');
-  const dow = selectedDate.getDay();
-  const dowIdx = dow===0?6:dow-1;
-  const monday = new Date(selectedDate);
-  monday.setDate(selectedDate.getDate()-dowIdx);
+    <section class="panel">
+      <div class="toolbar">
+        <button id="cal-prev" class="btn">Назад</button>
+        <button id="cal-today" class="btn btn--ghost">Сегодня</button>
+        <button id="cal-next" class="btn">Вперёд</button>
+        <strong id="calendar-title" class="section-title"></strong>
+        <select id="calendar-view" class="select hide" style="max-width:160px">
+          <option value="month">Месяц</option>
+          <option value="week">Неделя</option>
+          <option value="day">День по часам</option>
+        </select>
+        <select id="calendar-project" class="select" style="max-width:220px"></select>
+        <select id="calendar-performer" class="select" style="max-width:220px"></select>
+        <div class="calendar-view-switch" aria-label="Переключение вида календаря">
+          <button class="calendar-view-switch__btn active" data-calendar-mode="month">Месяц</button>
+          <button class="calendar-view-switch__btn" data-calendar-mode="week">Неделя</button>
+          <button class="calendar-view-switch__btn" data-calendar-mode="day">День</button>
+        </div>
+      </div>
+      <div id="calendar-root" style="margin-top:16px"></div>
+    </section>
+  </main>
 
-  const week = Array.from({length:7},(_,i)=>{
-    const d=new Date(monday); d.setDate(monday.getDate()+i); return d;
-  });
-
-  const HOURS = Array.from({length:14},(_,i)=>i+8);
-
-  // header
-  let html = '<div class="week-header-cell"></div>';
-  week.forEach((d,i)=>{
-    const isToday = sameDay(d,today);
-    html+=`<div class="week-header-cell ${isToday?'today-col':''}">${DAYS_RU[i]}<br><strong>${d.getDate()}</strong></div>`;
-  });
-
-  HOURS.forEach(h=>{
-    html += `<div class="week-time-label">${padZ(h)}:00</div>`;
-    week.forEach(d=>{
-      const ds=fmtDate(d);
-      const isToday=sameDay(d,today);
-      const slotTasks=tasks.filter(t=>t.date===ds&&parseInt(t.time)===h&&(activeFilter==='all'||t.tag===activeFilter));
-      const tasksHtml=slotTasks.map(t=>`<div class="task-card task-card--${t.tag}" style="position:relative;font-size:11px;padding:4px 7px;">${t.name}</div>`).join('');
-      html+=`<div class="week-slot ${isToday?'today-col':''}">${tasksHtml}</div>`;
-    });
-  });
-
-  grid.innerHTML=html;
-}
-
-// ───────────────────── ADD TASK ─────────────────────
-document.getElementById('addTaskForm').addEventListener('submit',()=>{
-  const name = document.getElementById('taskName').value.trim();
-  const time = document.getElementById('taskTime').value;
-  const tag  = document.getElementById('taskTag').value;
-  if(!name) return;
-  tasks.push({id:nextId++, date:fmtDate(selectedDate), time, name, tag, done:false});
-  document.getElementById('taskName').value='';
-  showToast('Задача добавлена');
-  renderAll();
-});
-
-// ───────────────────── FILTER ─────────────────────
-document.getElementById('filterTags').querySelectorAll('.filter-tag').forEach(el=>{
-  el.addEventListener('click',()=>{
-    activeFilter=el.dataset.filter;
-    document.querySelectorAll('.filter-tag').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
-    renderAll();
-  });
-});
-
-// ───────────────────── VIEW SWITCH ─────────────────────
-document.getElementById('btnDay').addEventListener('click',()=>{
-  currentView='day';
-  document.getElementById('dayView').style.display='';
-  document.getElementById('weekView').style.display='none';
-  document.getElementById('btnDay').classList.add('active');
-  document.getElementById('btnWeek').classList.remove('active');
-  renderAll();
-});
-document.getElementById('btnWeek').addEventListener('click',()=>{
-  currentView='week';
-  document.getElementById('dayView').style.display='none';
-  document.getElementById('weekView').style.display='';
-  document.getElementById('btnDay').classList.remove('active');
-  document.getElementById('btnWeek').classList.add('active');
-  renderAll();
-});
-
-// ───────────────────── RENDER ALL ─────────────────────
-function renderAll(){
-  renderMiniCal();
-  renderDayHeader();
-  if(currentView==='day'){
-    renderTimeline();
-    renderTaskList();
-  } else {
-    renderWeekView();
-  }
-}
-
-renderAll();
-</script>
+  <div id="app-modal" class="modal" aria-hidden="true"></div>
 </body>
 </html>

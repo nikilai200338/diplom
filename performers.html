@@ -8,196 +8,65 @@
   <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400..900&family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&family=Unbounded:wght@400..900&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body>
+<body data-page="performers">
+  <header class="header">
+    <div class="header__container">
+      <nav class="header__nav">
+        <a href="index.html"><img src="img/favicon.svg" alt="Voskresensky" width="36" height="36"></a>
+        <ul class="header__list">
+          <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
+          <li class="header__list-item active"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
+        </ul>
+        <a class="header__button" href="login.html">Сменить аккаунт</a>
+      </nav>
+    </div>
+  </header>
 
-<header class="header">
-  <div class="header__container">
-    <nav class="header__nav">
-     <img src="img/favicon.svg" alt="Логотип" width="36" height="36">
-      <ul class="header__list">
-        <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
-        <li class="header__list-item active"><a class="header__list-link" href="#">Исполнители</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
-        <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
-      </ul>
-      <a class="header__button">Сменить аккаунт</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-
-  <section class="page-hero">
-    <div class="page-hero__container">
+  <main class="app-shell">
+    <section class="page-top">
       <div>
-        <h1 class="page-hero__title">Исполнители</h1>
-        <p class="page-hero__subtitle">Управляйте командой и отслеживайте задачи по каждому участнику</p>
+        <h1 class="page-title">Исполнители</h1>
+        <p class="page-subtitle">База команды с ролями, ставками, занятостью, дедлайнами и экспортом в XLSX.</p>
       </div>
-      <div class="page-hero__actions">
-        <button class="btn btn--primary">+ Добавить исполнителя</button>
-        <button class="btn btn--secondary">Экспорт</button>
+      <div class="page-actions">
+        <button class="btn" data-export="performers">Экспорт .xlsx</button>
+        <button class="btn btn--green" data-action="open-performer-create">Добавить исполнителя</button>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="stats">
-    <div class="stats__container">
-      <div class="stats__card">
-        <span class="stats__number">12</span>
-        <span class="stats__label">Всего исполнителей</span>
+    <section id="performer-kpis" class="grid grid--4"></section>
+
+    <section class="panel" style="margin-top:18px">
+      <div class="filters">
+        <input id="performer-search" class="input" type="search" placeholder="Поиск по имени, роли, email">
+        <select id="performer-role" class="select"></select>
+        <select id="performer-status" class="select">
+          <option value="">Все статусы</option>
+          <option value="Свободен">Свободен</option>
+          <option value="Занят">Занят</option>
+          <option value="На проекте">На проекте</option>
+        </select>
+        <select id="performer-sort" class="select">
+          <option value="deadline">Сортировка: ближайший дедлайн</option>
+          <option value="rate-desc">Ставка: по убыванию</option>
+          <option value="rate-asc">Ставка: по возрастанию</option>
+          <option value="completed-desc">Выполненные проекты</option>
+          <option value="active-desc">Проекты в работе</option>
+        </select>
+        <button class="btn btn--ghost" data-action="reset-performer-filters">Сбросить</button>
       </div>
-      <div class="stats__card">
-        <span class="stats__number">8</span>
-        <span class="stats__label">Активных</span>
-      </div>
-      <div class="stats__card">
-        <span class="stats__number">34</span>
-        <span class="stats__label">Задач в работе</span>
-      </div>
-      <div class="stats__card stats__card--accent">
-        <span class="stats__number">3</span>
-        <span class="stats__label">Дедлайн сегодня</span>
-      </div>
-    </div>
-  </section>
+      <div id="performers-grid" class="grid grid--3"></div>
+    </section>
+  </main>
 
-  <section class="toolbar">
-    <div class="toolbar__container">
-      <div class="toolbar__search">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="toolbar__input" type="search" placeholder="Поиск по имени или роли…">
-      </div>
-      <div class="toolbar__filters">
-        <button class="filter-btn filter-btn--active">Все</button>
-        <button class="filter-btn">Активные</button>
-        <button class="filter-btn">На паузе</button>
-        <button class="filter-btn">Завершили</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="performers">
-    <div class="performers__container">
-
-      <article class="performer-card">
-        <div class="performer-card__header">
-          <div class="performer-card__avatar" style="background:#B9FF66;color:#191A23;">АС</div>
-          <div class="performer-card__meta">
-            <h2 class="performer-card__name">Александр Смирнов</h2>
-            <span class="performer-card__role">Видеооператор</span>
-          </div>
-          <span class="performer-card__status performer-card__status--active">Активен</span>
-        </div>
-        <div class="performer-card__body">
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Задач</span><span class="performer-card__stat-value">5</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Проектов</span><span class="performer-card__stat-value">3</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Дедлайн</span><span class="performer-card__stat-value performer-card__stat-value--warning">10 апр</span></div>
-        </div>
-        <div class="performer-card__progress"><div class="performer-card__progress-bar" style="width:68%"></div></div>
-        <div class="performer-card__footer">
-          <span class="performer-card__progress-label">Выполнено 68%</span>
-          <button class="performer-card__btn">Подробнее →</button>
-        </div>
-      </article>
-
-      <article class="performer-card">
-        <div class="performer-card__header">
-          <div class="performer-card__avatar" style="background:#191A23;color:#B9FF66;">МК</div>
-          <div class="performer-card__meta">
-            <h2 class="performer-card__name">Мария Козлова</h2>
-            <span class="performer-card__role">Монтажёр</span>
-          </div>
-          <span class="performer-card__status performer-card__status--active">Активна</span>
-        </div>
-        <div class="performer-card__body">
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Задач</span><span class="performer-card__stat-value">8</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Проектов</span><span class="performer-card__stat-value">4</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Дедлайн</span><span class="performer-card__stat-value">15 апр</span></div>
-        </div>
-        <div class="performer-card__progress"><div class="performer-card__progress-bar" style="width:45%"></div></div>
-        <div class="performer-card__footer">
-          <span class="performer-card__progress-label">Выполнено 45%</span>
-          <button class="performer-card__btn">Подробнее →</button>
-        </div>
-      </article>
-
-      <article class="performer-card">
-        <div class="performer-card__header">
-          <div class="performer-card__avatar" style="background:#F3F3F3;color:#191A23;border:1px solid rgba(25,26,35,.2)">ИВ</div>
-          <div class="performer-card__meta">
-            <h2 class="performer-card__name">Иван Волков</h2>
-            <span class="performer-card__role">Фотограф</span>
-          </div>
-          <span class="performer-card__status performer-card__status--pause">На паузе</span>
-        </div>
-        <div class="performer-card__body">
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Задач</span><span class="performer-card__stat-value">2</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Проектов</span><span class="performer-card__stat-value">1</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Дедлайн</span><span class="performer-card__stat-value">22 апр</span></div>
-        </div>
-        <div class="performer-card__progress"><div class="performer-card__progress-bar" style="width:20%"></div></div>
-        <div class="performer-card__footer">
-          <span class="performer-card__progress-label">Выполнено 20%</span>
-          <button class="performer-card__btn">Подробнее →</button>
-        </div>
-      </article>
-
-      <article class="performer-card">
-        <div class="performer-card__header">
-          <div class="performer-card__avatar" style="background:#B9FF66;color:#191A23;">НП</div>
-          <div class="performer-card__meta">
-            <h2 class="performer-card__name">Наталья Попова</h2>
-            <span class="performer-card__role">Сценарист</span>
-          </div>
-          <span class="performer-card__status performer-card__status--active">Активна</span>
-        </div>
-        <div class="performer-card__body">
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Задач</span><span class="performer-card__stat-value">6</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Проектов</span><span class="performer-card__stat-value">2</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Дедлайн</span><span class="performer-card__stat-value performer-card__stat-value--warning">7 апр</span></div>
-        </div>
-        <div class="performer-card__progress"><div class="performer-card__progress-bar" style="width:85%"></div></div>
-        <div class="performer-card__footer">
-          <span class="performer-card__progress-label">Выполнено 85%</span>
-          <button class="performer-card__btn">Подробнее →</button>
-        </div>
-      </article>
-
-      <article class="performer-card">
-        <div class="performer-card__header">
-          <div class="performer-card__avatar" style="background:#191A23;color:#B9FF66;">ДМ</div>
-          <div class="performer-card__meta">
-            <h2 class="performer-card__name">Дмитрий Морозов</h2>
-            <span class="performer-card__role">Звукорежиссёр</span>
-          </div>
-          <span class="performer-card__status performer-card__status--active">Активен</span>
-        </div>
-        <div class="performer-card__body">
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Задач</span><span class="performer-card__stat-value">4</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Проектов</span><span class="performer-card__stat-value">3</span></div>
-          <div class="performer-card__stat"><span class="performer-card__stat-label">Дедлайн</span><span class="performer-card__stat-value">18 апр</span></div>
-        </div>
-        <div class="performer-card__progress"><div class="performer-card__progress-bar" style="width:55%"></div></div>
-        <div class="performer-card__footer">
-          <span class="performer-card__progress-label">Выполнено 55%</span>
-          <button class="performer-card__btn">Подробнее →</button>
-        </div>
-      </article>
-
-      <article class="performer-card performer-card--add">
-        <button class="performer-card__add-btn">
-          <span class="performer-card__add-icon">+</span>
-          <span class="performer-card__add-label">Добавить исполнителя</span>
-        </button>
-      </article>
-
-    </div>
-  </section>
-
-</main>
+  <div id="app-modal" class="modal" aria-hidden="true"></div>
 </body>
 </html>

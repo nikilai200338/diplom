@@ -8,565 +8,70 @@
   <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400..900&family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&family=Unbounded:wght@400..900&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body>
+<body data-page="finances">
+  <header class="header">
+    <div class="header__container">
+      <nav class="header__nav">
+        <a href="index.html"><img src="img/favicon.svg" alt="Voskresensky" width="36" height="36"></a>
+        <ul class="header__list">
+          <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+          <li class="header__list-item active"><a class="header__list-link" href="finances.html">Финансы</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
+        </ul>
+        <a class="header__button" href="login.html">Сменить аккаунт</a>
+      </nav>
+    </div>
+  </header>
 
-<header class="header">
-  <div class="header__container">
-    <nav class="header__nav">
-      <img src="img/favicon.svg" alt="" width="36" height="36">
-      <ul class="header__list">
-        <li class="header__list-item">
-          <a class="header__list-link" href="index.html">Главная</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="performers.html">Исполнители</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="calendar.html">Календарь</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="projects-page.html">Проекты</a></li>
-        <li class="header__list-item active">
-          <a class="header__list-link" href="finances.html">Финансы</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="map.html">Карта</a></li>
-      </ul>
-      <a class="header__button">Сменить аккаунт</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-<section class="finances">
-  <div class="finances__container">
-
-    <!-- PAGE TITLE + PERIOD SELECTOR -->
-    <div class="finances__header">
+  <main class="app-shell">
+    <section class="page-top">
       <div>
-        <h1 class="finances__title">Финансы</h1>
-        <p class="finances__subtitle" id="periodLabel">Апрель 2026</p>
+        <h1 class="page-title">Финансы</h1>
+        <p class="page-subtitle">Доходы, проектные и общие расходы, аренда оборудования, чеки, счета, документы и экспорт.</p>
       </div>
-      <div style="display:flex; flex-direction:column; gap:10px; align-items:flex-end;">
-        <div class="period-tabs" id="periodTabs">
-          <button class="period-tab" data-period="week" onclick="setPeriod(this)">Неделя</button>
-          <button class="period-tab active" data-period="month" onclick="setPeriod(this)">Месяц</button>
-          <button class="period-tab" data-period="quarter" onclick="setPeriod(this)">Квартал</button>
-          <button class="period-tab" data-period="year" onclick="setPeriod(this)">Год</button>
+      <div class="page-actions">
+        <button class="btn" data-export="finances">Экспорт финансов</button>
+        <button class="btn" data-export="expenses">Экспорт расходов</button>
+        <button class="btn" data-export="documents">Экспорт документов</button>
+        <button class="btn btn--green" data-action="open-expense-create">Добавить трату</button>
+      </div>
+    </section>
+
+    <section id="finance-kpis" class="grid grid--4"></section>
+
+    <section class="grid grid--2" style="margin-top:18px">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="section-title">Динамика доходов и расходов</h2>
         </div>
-        <div class="period-custom">
-          <span style="font-size:14px;color:#666;">Свой период:</span>
-          <input type="date" id="dateFrom" value="2026-04-01">
-          <span style="color:#999;">—</span>
-          <input type="date" id="dateTo" value="2026-04-30">
-          <button class="btn btn-secondary" style="font-size:14px;padding:6px 14px;" onclick="applyCustomPeriod()">Применить</button>
+        <canvas id="finance-line" class="finance-chart"></canvas>
+      </div>
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="section-title">Расходы по категориям</h2>
         </div>
+        <canvas id="finance-pie" class="finance-chart"></canvas>
       </div>
-    </div>
+    </section>
 
-    <!-- KPI CARDS -->
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-card--accent">
-        <div class="kpi-card__label">Баланс</div>
-        <div class="kpi-card__value" id="kpiBalance">+218 400 ₽</div>
-        <div class="kpi-card__delta up" id="kpiBalanceDelta">↑ +12% к прошлому периоду</div>
+    <section class="panel" style="margin-top:18px">
+      <div class="tabs">
+        <button class="tab active" data-finance-tab="projects">Проекты</button>
+        <button class="tab" data-finance-tab="expenses">Расходы</button>
+        <button class="tab" data-finance-tab="documents">Документы</button>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-card__label">Доходы</div>
-        <div class="kpi-card__value positive" id="kpiIncome">480 000 ₽</div>
-        <div class="kpi-card__delta up">↑ +8% к прошлому периоду</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card__label">Расходы</div>
-        <div class="kpi-card__value negative" id="kpiExpense">261 600 ₽</div>
-        <div class="kpi-card__delta down">↓ +3% к прошлому периоду</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card__label">Дебиторка</div>
-        <div class="kpi-card__value" style="color:#b06000;">95 000 ₽</div>
-        <div class="kpi-card__delta" style="color:#888;">3 неоплаченных счёта</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card__label">Рентабельность</div>
-        <div class="kpi-card__value positive">45.5%</div>
-        <div class="kpi-card__delta up">↑ +2.1 пп</div>
-      </div>
-    </div>
+      <div id="finance-tab-content"></div>
+    </section>
+  </main>
 
-    <!-- CHART -->
-    <div class="chart-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-        <span class="chart-section__title" style="margin-bottom:0;">Динамика доходов и расходов</span>
-        <div style="display:flex;gap:16px;font-size:14px;">
-          <span><span style="display:inline-block;width:12px;height:12px;background:#B9FF66;border-radius:2px;margin-right:5px;"></span>Доходы</span>
-          <span><span style="display:inline-block;width:12px;height:12px;background:#191A23;border-radius:2px;margin-right:5px;"></span>Расходы</span>
-        </div>
-      </div>
-      <div class="chart-wrapper">
-        <canvas id="mainChart"></canvas>
-      </div>
-    </div>
-
-    <!-- DONUT CHARTS + BUDGET -->
-    <div class="finances__two-col">
-      <!-- Expense breakdown -->
-      <div class="donut-section">
-        <div class="donut-section__title">Структура расходов</div>
-        <canvas id="expenseDonut" height="180"></canvas>
-        <div class="legend" id="expenseLegend"></div>
-      </div>
-      <!-- Budget tracker -->
-      <div class="donut-section">
-        <div class="donut-section__title">Бюджет по категориям</div>
-        <div class="budget-grid" id="budgetGrid">
-          <!-- filled by JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- TRANSACTIONS TABLE -->
-    <div class="table-section">
-      <div class="table-section__header">
-        <span class="table-section__title">Операции</span>
-        <div class="table-controls">
-          <button class="btn btn-green" onclick="openModal()">+ Добавить</button>
-          <button class="btn btn-secondary" onclick="exportCSV()">↓ CSV</button>
-          <button class="btn btn-secondary" onclick="exportPDF()">↓ PDF</button>
-        </div>
-      </div>
-      <div class="filter-row">
-        <select class="filter-select" id="filterType" onchange="filterTable()">
-          <option value="">Все типы</option>
-          <option value="income">Доход</option>
-          <option value="expense">Расход</option>
-        </select>
-        <select class="filter-select" id="filterCat" onchange="filterTable()">
-          <option value="">Все категории</option>
-          <option value="team">Команда</option>
-          <option value="food">Питание</option>
-          <option value="equipment">Оборудование</option>
-          <option value="transport">Транспорт</option>
-          <option value="software">ПО и подписки</option>
-          <option value="other">Прочее</option>
-        </select>
-        <input class="filter-input" type="text" id="filterSearch" placeholder="Поиск по описанию..." oninput="filterTable()">
-        <select class="filter-select" id="filterSort" onchange="filterTable()">
-          <option value="date-desc">Дата ↓</option>
-          <option value="date-asc">Дата ↑</option>
-          <option value="amount-desc">Сумма ↓</option>
-          <option value="amount-asc">Сумма ↑</option>
-        </select>
-      </div>
-      <div style="overflow-x:auto;">
-        <table class="transactions-table">
-          <thead>
-            <tr>
-              <th>Дата</th>
-              <th>Описание</th>
-              <th>Категория</th>
-              <th>Проект</th>
-              <th>Сумма</th>
-              <th>Документ</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody id="transactionsBody">
-          </tbody>
-        </table>
-      </div>
-      <div class="table-pagination">
-        <span id="paginationInfo">Показано 1–10 из 18</span>
-        <div class="pagination-btns" id="paginationBtns"></div>
-      </div>
-    </div>
-
-    <!-- EXPORT ROW -->
-    <div class="export-row">
-      <button class="btn btn-secondary" onclick="alert('Формирование отчёта...')">📄 Отчёт за период</button>
-      <button class="btn btn-secondary" onclick="alert('Акт сверки...')">📋 Акт сверки</button>
-    </div>
-
-  </div>
-</section>
-</main>
-
-<!-- ADD TRANSACTION MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
-  <div class="modal">
-    <button class="modal__close" onclick="closeModal()">×</button>
-    <div class="modal__title">Новая операция</div>
-
-    <div class="form-type-toggle">
-      <button class="form-type-btn income active" id="typeIncome" onclick="setTxType('income')">Доход</button>
-      <button class="form-type-btn expense" id="typeExpense" onclick="setTxType('expense')">Расход</button>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Дата</label>
-        <input class="form-input" type="date" id="txDate" value="2026-04-07">
-      </div>
-      <div class="form-group">
-        <label>Сумма (₽)</label>
-        <input class="form-input" type="number" id="txAmount" placeholder="0">
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Описание</label>
-      <input class="form-input" type="text" id="txDesc" placeholder="Описание операции">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Категория</label>
-        <select class="form-select" id="txCat">
-          <option value="income">Доход</option>
-          <option value="team">Команда</option>
-          <option value="food">Питание</option>
-          <option value="equipment">Оборудование</option>
-          <option value="transport">Транспорт</option>
-          <option value="software">ПО и подписки</option>
-          <option value="other">Прочее</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Проект</label>
-        <select class="form-select" id="txProject">
-          <option>Свадьба Ивановых</option>
-          <option>Корпоратив ООО «Нова»</option>
-          <option>Клип группы Resonance</option>
-          <option>Рекламный ролик AutoPro</option>
-          <option>Общие расходы</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Комментарий</label>
-      <textarea class="form-textarea" id="txNote" placeholder="Дополнительные заметки..."></textarea>
-    </div>
-
-    <div class="form-group">
-      <label>Прикрепить документ</label>
-      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-        <div class="upload-zone__icon">📎</div>
-        <div>Чек, акт, договор — перетащите или <strong>выберите файл</strong></div>
-        <div style="font-size:12px;margin-top:4px;color:#aaa;">PDF, JPG, PNG, DOCX до 10 МБ</div>
-      </div>
-      <input type="file" id="fileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.docx" onchange="handleFile(event)">
-      <div id="filePreview" style="margin-top:8px;font-size:13px;color:#3a8c1e;display:none;"></div>
-    </div>
-
-    <div class="modal__actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-green" onclick="saveTransaction()">Сохранить</button>
-    </div>
-  </div>
-</div>
-
-<!-- CHART.JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<script>
-// ======= DATA =======
-let transactions = [
-  {id:1, date:'2026-04-06', desc:'Оплата — Свадьба Ивановых', cat:'income', project:'Свадьба Ивановых', amount:180000, type:'income', file:'договор_иванов.pdf'},
-  {id:2, date:'2026-04-05', desc:'Зарплата оператора Кирилл', cat:'team', project:'Общие расходы', amount:-45000, type:'expense', file:null},
-  {id:3, date:'2026-04-04', desc:'Аренда студии', cat:'other', project:'Корпоратив ООО «Нова»', amount:-18000, type:'expense', file:'акт_студия.pdf'},
-  {id:4, date:'2026-04-04', desc:'Предоплата — Рекламный ролик AutoPro', cat:'income', project:'Рекламный ролик AutoPro', amount:120000, type:'income', file:'договор_autopro.pdf'},
-  {id:5, date:'2026-04-03', desc:'Аккумуляторы GVM', cat:'equipment', project:'Общие расходы', amount:-12500, type:'expense', file:'чек_акб.jpg'},
-  {id:6, date:'2026-04-03', desc:'Adobe Creative Cloud', cat:'software', project:'Общие расходы', amount:-3600, type:'expense', file:null},
-  {id:7, date:'2026-04-02', desc:'Питание на съёмке Клип Resonance', cat:'food', project:'Клип группы Resonance', amount:-4200, type:'expense', file:'чек_фуд.jpg'},
-  {id:8, date:'2026-04-02', desc:'Зарплата монтажёра Артём', cat:'team', project:'Общие расходы', amount:-38000, type:'expense', file:null},
-  {id:9, date:'2026-04-01', desc:'Доплата — Корпоратив ООО «Нова»', cat:'income', project:'Корпоратив ООО «Нова»', amount:95000, type:'income', file:'акт_нова.pdf'},
-  {id:10,date:'2026-04-01', desc:'Топливо BMW', cat:'transport', project:'Общие расходы', amount:-4800, type:'expense', file:null},
-  {id:11,date:'2026-03-30', desc:'Штатив Manfrotto', cat:'equipment', project:'Общие расходы', amount:-21000, type:'expense', file:'чек_manfrotto.jpg'},
-  {id:12,date:'2026-03-29', desc:'Оплата — Клип Resonance', cat:'income', project:'Клип группы Resonance', amount:85000, type:'income', file:'договор_resonance.pdf'},
-  {id:13,date:'2026-03-28', desc:'Frame.io подписка', cat:'software', project:'Общие расходы', amount:-2900, type:'expense', file:null},
-  {id:14,date:'2026-03-27', desc:'Кофе и питание команды', cat:'food', project:'Общие расходы', amount:-3800, type:'expense', file:null},
-  {id:15,date:'2026-03-26', desc:'Зарплата ассистента Дима', cat:'team', project:'Общие расходы', amount:-25000, type:'expense', file:null},
-  {id:16,date:'2026-03-25', desc:'Карты памяти ProGrade', cat:'equipment', project:'Общие расходы', amount:-8700, type:'expense', file:'чек_карты.jpg'},
-  {id:17,date:'2026-03-24', desc:'Такси на съёмку', cat:'transport', project:'Свадьба Ивановых', amount:-1900, type:'expense', file:null},
-  {id:18,date:'2026-03-23', desc:'Аванс — Свадьба Ивановых', cat:'income', project:'Свадьба Ивановых', amount:90000, type:'income', file:'договор_иванов.pdf'},
-];
-
-let currentPage = 1;
-const perPage = 10;
-let filtered = [...transactions];
-let txType = 'income';
-let nextId = 19;
-
-// ======= PERIOD =======
-function setPeriod(el) {
-  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const labels = {week:'Последние 7 дней', month:'Апрель 2026', quarter:'Q2 2026', year:'2026'};
-  document.getElementById('periodLabel').textContent = labels[el.dataset.period] || 'Свой период';
-}
-function applyCustomPeriod() {
-  const from = document.getElementById('dateFrom').value;
-  const to = document.getElementById('dateTo').value;
-  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('periodLabel').textContent = from + ' — ' + to;
-}
-
-// ======= BADGE =======
-function catBadge(cat) {
-  const map = {
-    team:'<span class="badge badge-team">Команда</span>',
-    food:'<span class="badge badge-food">Питание</span>',
-    equipment:'<span class="badge badge-equipment">Оборудование</span>',
-    income:'<span class="badge badge-income">Доход</span>',
-    transport:'<span class="badge badge-transport">Транспорт</span>',
-    software:'<span class="badge badge-software">ПО</span>',
-    other:'<span class="badge badge-other">Прочее</span>',
-  };
-  return map[cat] || '<span class="badge badge-other">'+cat+'</span>';
-}
-
-// ======= TABLE =======
-function filterTable() {
-  const type = document.getElementById('filterType').value;
-  const cat = document.getElementById('filterCat').value;
-  const search = document.getElementById('filterSearch').value.toLowerCase();
-  const sort = document.getElementById('filterSort').value;
-
-  filtered = transactions.filter(t => {
-    if (type && t.type !== type) return false;
-    if (cat && t.cat !== cat) return false;
-    if (search && !t.desc.toLowerCase().includes(search)) return false;
-    return true;
-  });
-
-  filtered.sort((a,b) => {
-    if (sort === 'date-desc') return new Date(b.date) - new Date(a.date);
-    if (sort === 'date-asc') return new Date(a.date) - new Date(b.date);
-    if (sort === 'amount-desc') return Math.abs(b.amount) - Math.abs(a.amount);
-    if (sort === 'amount-asc') return Math.abs(a.amount) - Math.abs(b.amount);
-    return 0;
-  });
-
-  currentPage = 1;
-  renderTable();
-}
-
-function renderTable() {
-  const tbody = document.getElementById('transactionsBody');
-  const start = (currentPage - 1) * perPage;
-  const slice = filtered.slice(start, start + perPage);
-
-  tbody.innerHTML = slice.map(t => {
-    const amtClass = t.amount > 0 ? 'amount-positive' : 'amount-negative';
-    const amtStr = (t.amount > 0 ? '+' : '') + t.amount.toLocaleString('ru-RU') + ' ₽';
-    const fileBtn = t.file
-      ? `<button class="attachment-btn has-file" title="${t.file}">📎 ${t.file}</button>`
-      : `<button class="attachment-btn" onclick="promptAttach(${t.id})">📎 Прикрепить</button>`;
-    return `<tr>
-      <td style="white-space:nowrap;color:#666;font-size:14px;">${formatDate(t.date)}</td>
-      <td>${t.desc}</td>
-      <td>${catBadge(t.cat)}</td>
-      <td style="font-size:14px;color:#555;">${t.project}</td>
-      <td class="${amtClass}" style="white-space:nowrap;">${amtStr}</td>
-      <td>${fileBtn}</td>
-      <td>
-        <button class="attachment-btn" onclick="deleteTx(${t.id})" style="color:#c0392b;border-color:#c0392b;">✕</button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  // pagination
-  const total = filtered.length;
-  const pages = Math.ceil(total / perPage);
-  const info = `Показано ${Math.min(start+1,total)}–${Math.min(start+perPage,total)} из ${total}`;
-  document.getElementById('paginationInfo').textContent = info;
-  const btnsCont = document.getElementById('paginationBtns');
-  btnsCont.innerHTML = '';
-  for (let i = 1; i <= pages; i++) {
-    const b = document.createElement('button');
-    b.className = 'page-btn' + (i === currentPage ? ' active' : '');
-    b.textContent = i;
-    b.onclick = () => { currentPage = i; renderTable(); };
-    btnsCont.appendChild(b);
-  }
-}
-
-function formatDate(d) {
-  const dt = new Date(d);
-  return dt.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'numeric'});
-}
-
-function deleteTx(id) {
-  if (!confirm('Удалить операцию?')) return;
-  transactions = transactions.filter(t => t.id !== id);
-  filterTable();
-  updateKPIs();
-  updateCharts();
-}
-
-function promptAttach(id) {
-  const name = prompt('Имя файла (для демо):');
-  if (!name) return;
-  const t = transactions.find(t => t.id === id);
-  if (t) { t.file = name; renderTable(); }
-}
-
-// ======= MODAL =======
-function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
-function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
-function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
-
-function setTxType(type) {
-  txType = type;
-  document.getElementById('typeIncome').classList.toggle('active', type === 'income');
-  document.getElementById('typeExpense').classList.toggle('active', type === 'expense');
-}
-
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('filePreview').style.display = 'block';
-  document.getElementById('filePreview').textContent = '✓ ' + file.name;
-}
-
-function saveTransaction() {
-  const date = document.getElementById('txDate').value;
-  const amount = parseFloat(document.getElementById('txAmount').value);
-  const desc = document.getElementById('txDesc').value.trim();
-  const cat = document.getElementById('txCat').value;
-  const project = document.getElementById('txProject').value;
-  const fileInput = document.getElementById('fileInput');
-  const file = fileInput.files[0] ? fileInput.files[0].name : null;
-
-  if (!date || !amount || !desc) { alert('Заполните дату, сумму и описание'); return; }
-
-  const finalAmount = txType === 'expense' ? -Math.abs(amount) : Math.abs(amount);
-
-  transactions.unshift({
-    id: nextId++,
-    date, desc, cat: txType === 'income' ? 'income' : cat,
-    project, amount: finalAmount, type: txType, file
-  });
-
-  closeModal();
-  filterTable();
-  updateKPIs();
-  updateCharts();
-
-  // reset form
-  document.getElementById('txAmount').value = '';
-  document.getElementById('txDesc').value = '';
-  document.getElementById('txNote').value = '';
-  document.getElementById('filePreview').style.display = 'none';
-  fileInput.value = '';
-}
-
-// ======= KPIs =======
-function updateKPIs() {
-  const income = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const expense = Math.abs(transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
-  const balance = income - expense;
-  document.getElementById('kpiBalance').textContent = (balance>=0?'+':'')+balance.toLocaleString('ru-RU')+' ₽';
-  document.getElementById('kpiIncome').textContent = income.toLocaleString('ru-RU')+' ₽';
-  document.getElementById('kpiExpense').textContent = expense.toLocaleString('ru-RU')+' ₽';
-}
-
-// ======= CHARTS =======
-let mainChart, donutChart;
-
-function initCharts() {
-  // Line chart
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  const labels = ['Окт','Ноя','Дек','Янв','Фев','Мар','Апр'];
-  mainChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label:'Доходы', data:[320000,410000,390000,450000,380000,420000,480000],
-          backgroundColor:'#B9FF66', borderRadius:4, order:2 },
-        { label:'Расходы', data:[210000,250000,230000,280000,220000,240000,261600],
-          backgroundColor:'#191A23', borderRadius:4, order:2 },
-        { label:'Баланс', data:[110000,160000,160000,170000,160000,180000,218400],
-          type:'line', borderColor:'#999', borderWidth:2, pointBackgroundColor:'#999',
-          tension:0.4, fill:false, order:1, yAxisID:'y' }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false } },
-      scales: {
-        x:{ grid:{ display:false }, ticks:{ font:{ family:'Space Grotesk', size:13 } } },
-        y:{ grid:{ color:'#f0f0f0' }, ticks:{ font:{ family:'Space Grotesk', size:13 },
-          callback: v => (v/1000)+'К ₽' } }
-      }
-    }
-  });
-
-  // Donut
-  const ctxD = document.getElementById('expenseDonut').getContext('2d');
-  const expData = [108000, 8000, 42200, 6700, 14000, 83000];
-  const expLabels = ['Команда','Питание','Оборудование','Транспорт','ПО','Прочее'];
-  const expColors = ['#191A23','#B9FF66','#4A90D9','#FFD166','#9B59B6','#aaa'];
-
-  donutChart = new Chart(ctxD, {
-    type:'doughnut',
-    data:{ labels:expLabels, datasets:[{ data:expData, backgroundColor:expColors, borderWidth:2, borderColor:'white' }] },
-    options:{
-      responsive:true, cutout:'65%',
-      plugins:{ legend:{ display:false }, tooltip:{
-        callbacks:{ label: ctx => ' '+ctx.label+': '+ctx.parsed.toLocaleString('ru-RU')+' ₽' }
-      }}
-    }
-  });
-
-  // Legend
-  const total = expData.reduce((s,v)=>s+v,0);
-  document.getElementById('expenseLegend').innerHTML = expLabels.map((l,i) =>
-    `<div class="legend-item">
-      <span class="legend-dot" style="background:${expColors[i]}"></span>
-      <span class="legend-label">${l}</span>
-      <span class="legend-value">${((expData[i]/total)*100).toFixed(1)}%</span>
-    </div>`
-  ).join('');
-
-  // Budget
-  const budgets = [
-    {name:'Команда', spent:108000, limit:150000},
-    {name:'Оборудование', spent:42200, limit:50000},
-    {name:'Питание', spent:8000, limit:10000},
-    {name:'Транспорт', spent:6700, limit:15000},
-    {name:'ПО и подписки', spent:14000, limit:20000},
-  ];
-  document.getElementById('budgetGrid').innerHTML = budgets.map(b => {
-    const pct = Math.min((b.spent/b.limit)*100, 100);
-    const cls = pct >= 95 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-    return `<div class="budget-item">
-      <div class="budget-item__header">
-        <span class="budget-item__name">${b.name}</span>
-        <span class="budget-item__amounts">${b.spent.toLocaleString('ru-RU')} / ${b.limit.toLocaleString('ru-RU')} ₽</span>
-      </div>
-      <div class="budget-bar"><div class="budget-bar__fill ${cls}" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-}
-
-function updateCharts() {
-  // minimal refresh — just re-render table in this demo
-}
-
-// ======= EXPORT =======
-function exportCSV() {
-  const headers = ['Дата','Описание','Категория','Проект','Сумма'];
-  const rows = transactions.map(t => [t.date, t.desc, t.cat, t.project, t.amount].join(';'));
-  const csv = [headers.join(';'), ...rows].join('');
-  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'finances.csv'; a.click();
-}
-function exportPDF() { alert('Генерация PDF... (в реальном проекте — wkhtmltopdf или jsPDF)'); }
-
-// ======= INIT =======
-filterTable();
-initCharts();
-</script>
+  <div id="app-modal" class="modal" aria-hidden="true"></div>
 </body>
 </html>

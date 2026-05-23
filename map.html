@@ -8,222 +8,64 @@
   <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400..900&family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&family=Unbounded:wght@400..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body>
-
-<!-- HEADER — точная копия из index.html -->
-<header class="header">
-  <div class="header__container">
-    <nav class="header__nav">
-      <img src="img/favicon.svg" alt="" width="36" height="36">
-      <ul class="header__list">
-        <li class="header__list-item">
-          <a class="header__list-link" href="index.html">Главная</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="performers.html">Исполнители</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="calendar.html">Календарь</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="projects-page.html">Проекты</a></li>
-        <li class="header__list-item">
-          <a class="header__list-link" href="finances.html">Финансы</a></li>
-        <li class="header__list-item active">
-          <a class="header__list-link" href="map.html">Карта</a></li>
-      </ul>
-      <a class="header__button">Сменить аккаунт</a>
-    </nav>
-  </div>
-</header>
-
-<!-- MAP SECTION -->
-<div class="map-wrapper">
-
-  <!-- COUNTER + DROPDOWN -->
-  <div class="counter">
-    <button class="counter__btn" id="counterBtn" aria-haspopup="listbox" aria-expanded="false">
-      📍 Точек съёмки: <span class="cnt" id="pointCount">0</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="counter__dropdown" id="dropdown" role="listbox">
-      <div class="dropdown-header">
-        История точек
-        <span class="dropdown-header-count" id="dropdownTotal">0</span>
-      </div>
-      <div class="dropdown-search">
-        <input type="text" id="searchInput" placeholder="Поиск по адресу или дате…">
-      </div>
-      <ul class="dropdown-list" id="dropdownList"></ul>
+<body data-page="map">
+  <header class="header">
+    <div class="header__container">
+      <nav class="header__nav">
+        <a href="index.html"><img src="img/favicon.svg" alt="Voskresensky" width="36" height="36"></a>
+        <ul class="header__list">
+          <li class="header__list-item"><a class="header__list-link" href="index.html">Главная</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+          <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
+          <li class="header__list-item active"><a class="header__list-link" href="map.html">Карта</a></li>
+        </ul>
+        <a class="header__button" href="login.html">Сменить аккаунт</a>
+      </nav>
     </div>
-  </div>
+  </header>
 
-  <!-- CONTROLS -->
-  <div class="controls">
-    <button class="map-btn map-btn--add" id="toggleMode">📍 Добавить точку</button>
-    <button class="map-btn map-btn--danger" id="clearAll">🗑 Очистить всё</button>
-  </div>
+  <main class="app-shell">
+    <section class="page-top">
+      <div>
+        <h1 class="page-title">Карта съёмок</h1>
+        <p class="page-subtitle">Точки автоматически собираются из проектов: локация, период съёмки, клиент, статус и тепловые зоны активности.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn" data-export="map">Экспорт точек</button>
+        <button class="btn btn--green" id="download-map">Скачать PNG</button>
+      </div>
+    </section>
 
-  <!-- HINT -->
-  <div class="hint" id="hint">Кликните на карту, чтобы отметить место съёмки</div>
+    <section class="panel">
+      <div class="toolbar">
+        <select id="map-period" class="select" style="max-width:220px">
+          <option value="all">Все периоды</option>
+          <option value="day">Сегодня</option>
+          <option value="week">Неделя</option>
+          <option value="month">Месяц</option>
+          <option value="custom">Произвольный диапазон</option>
+        </select>
+        <input id="map-date-start" class="input" type="date" style="max-width:180px">
+        <input id="map-date-end" class="input" type="date" style="max-width:180px">
+        <select id="map-status" class="select" style="max-width:220px"></select>
+      </div>
+      <div id="map-capture" class="map-print-card" style="margin-top:16px">
+        <div id="shooting-map" class="map-box"></div>
+      </div>
+      <div id="map-list" class="grid grid--3" style="margin-top:16px"></div>
+    </section>
+  </main>
 
-  <div id="map"></div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-<script>
-  const map = L.map('map').setView([59.9343, 30.3351], 12);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
-  }).addTo(map);
-
-  let raw = JSON.parse(localStorage.getItem('shootingPointsV2') || localStorage.getItem('shootingPoints') || '[]');
-  let points = raw.map(p => Array.isArray(p) ? { lat: p[0], lng: p[1], date: null, address: null } : p);
-  let addMode = false;
-
-  const heatLayer = L.heatLayer(points.map(p => [p.lat, p.lng, 1]), {
-    radius: 30, blur: 20, maxZoom: 17,
-    gradient: { 0.2: '#B9FF66', 0.5: '#7acc00', 0.8: '#3d7a00', 1.0: '#191A23' }
-  }).addTo(map);
-
-  function save() {
-    localStorage.setItem('shootingPointsV2', JSON.stringify(points));
-  }
-
-  async function reverseGeocode(lat, lng) {
-    try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ru`
-      );
-      const d = await r.json();
-      if (d && d.address) {
-        const a = d.address;
-        const parts = [
-          a.road || a.pedestrian || a.footway || '',
-          a.house_number || '',
-          a.suburb || a.neighbourhood || '',
-          a.city || a.town || a.village || ''
-        ].filter(Boolean);
-        return parts.length ? parts.join(', ') : d.display_name.split(',').slice(0, 3).join(',');
-      }
-    } catch(e) {}
-    return null;
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleString('ru-RU', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  }
-
-  function renderDropdown(filter) {
-    filter = (filter || '').toLowerCase();
-    const list = document.getElementById('dropdownList');
-    document.getElementById('dropdownTotal').textContent = points.length;
-
-    const filtered = points.map((p, i) => ({ ...p, _i: i })).filter(p => {
-      if (!filter) return true;
-      return (p.address || '').toLowerCase().includes(filter) ||
-             formatDate(p.date).toLowerCase().includes(filter);
-    });
-
-    list.innerHTML = '';
-    if (!filtered.length) {
-      list.innerHTML = '<li class="dropdown-empty">Точки не найдены</li>';
-      return;
-    }
-
-    [...filtered].reverse().forEach(p => {
-      const li = document.createElement('li');
-      li.className = 'dropdown-item';
-      li.innerHTML = `
-        <div class="dropdown-item__num">${points.length - p._i}</div>
-        <div class="dropdown-item__body">
-          <div class="dropdown-item__date">📅 ${formatDate(p.date)}</div>
-          <div class="dropdown-item__coords">🌐 ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</div>
-          <div class="dropdown-item__address">
-            ${p.address ? '📍 ' + p.address : '<span style="color:rgba(25,26,35,.25)">Адрес загружается…</span>'}
-          </div>
-        </div>
-        <button class="dropdown-item__delete" title="Удалить точку" data-idx="${p._i}">✕</button>
-      `;
-      li.querySelector('.dropdown-item__body').addEventListener('click', () => {
-        map.flyTo([p.lat, p.lng], 16, { duration: 1 });
-        closeDropdown();
-      });
-      li.querySelector('.dropdown-item__delete').addEventListener('click', e => {
-        e.stopPropagation();
-        points.splice(p._i, 1);
-        save(); updateAll();
-        renderDropdown(document.getElementById('searchInput').value);
-      });
-      list.appendChild(li);
-    });
-  }
-
-  function updateAll() {
-    heatLayer.setLatLngs(points.map(p => [p.lat, p.lng, 1]));
-    document.getElementById('pointCount').textContent = points.length;
-    document.getElementById('dropdownTotal').textContent = points.length;
-  }
-
-  const counterBtn = document.getElementById('counterBtn');
-  const dropdown   = document.getElementById('dropdown');
-
-  function openDropdown()  { dropdown.classList.add('open');    counterBtn.classList.add('open');    counterBtn.setAttribute('aria-expanded','true');  renderDropdown(document.getElementById('searchInput').value); }
-  function closeDropdown() { dropdown.classList.remove('open'); counterBtn.classList.remove('open'); counterBtn.setAttribute('aria-expanded','false'); }
-
-  counterBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    dropdown.classList.contains('open') ? closeDropdown() : openDropdown();
-  });
-  document.addEventListener('click', e => {
-    if (!document.querySelector('.counter').contains(e.target)) closeDropdown();
-  });
-  document.getElementById('searchInput').addEventListener('input', e => renderDropdown(e.target.value));
-
-  const toggleBtn = document.getElementById('toggleMode');
-  const hint      = document.getElementById('hint');
-
-  toggleBtn.addEventListener('click', () => {
-    addMode = !addMode;
-    toggleBtn.textContent = addMode ? '✅ Режим включён' : '📍 Добавить точку';
-    toggleBtn.classList.toggle('map-btn--add',    !addMode);
-    toggleBtn.classList.toggle('map-btn--active',  addMode);
-    hint.classList.toggle('show', addMode);
-    map.getContainer().style.cursor = addMode ? 'crosshair' : '';
-  });
-
-  map.on('click', async e => {
-    if (!addMode) return;
-    const { lat, lng } = e.latlng;
-    const pt = { lat, lng, date: new Date().toISOString(), address: null };
-    points.push(pt);
-    save(); updateAll();
-
-    const marker = L.circleMarker([lat, lng], {
-      radius: 10, color: '#191A23', fillColor: '#B9FF66', fillOpacity: 1, weight: 2
-    }).addTo(map);
-    setTimeout(() => map.removeLayer(marker), 700);
-
-    const addr = await reverseGeocode(lat, lng);
-    pt.address = addr;
-    save();
-    if (dropdown.classList.contains('open')) {
-      renderDropdown(document.getElementById('searchInput').value);
-    }
-  });
-
-  document.getElementById('clearAll').addEventListener('click', () => {
-    if (confirm('Удалить все точки съёмки?')) {
-      points = [];
-      save(); updateAll(); renderDropdown();
-    }
-  });
-
-  updateAll();
-</script>
+  <div id="app-modal" class="modal" aria-hidden="true"></div>
 </body>
 </html>
