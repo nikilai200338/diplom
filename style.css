@@ -15,7 +15,7 @@
   --teal: #26a69a;
   --shadow: 0 18px 45px rgba(25, 26, 35, .08);
   --shadow-sm: 0 8px 22px rgba(25, 26, 35, .06);
-  --radius: 8px;
+  --radius: 0px;
   --container: 1440px;
 }
 
@@ -82,7 +82,7 @@ h1, h2, h3, h4,
   align-items: center;
   min-height: 36px;
   padding: 7px 12px;
-  border-radius: 6px;
+  border-radius: 0px;
   font-size: 16px;
   transition: .2s ease;
 }
@@ -835,9 +835,9 @@ h1, h2, h3, h4,
 .calendar-view-switch__btn:hover {
   background: var(--grey);
 }
-.calendar-view-switch .calendar-view-switch__btn.active {
-  background: var(--dark) !important;
-  color: var(--green) !important;
+.calendar-view-switch__btn.active {
+  background: var(--dark);
+  color: var(--green);
 }
 
 @media (max-width: 1100px) {
