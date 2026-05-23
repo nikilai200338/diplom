@@ -19,7 +19,7 @@
       </a>
 
       <div class="login-visual__content">
-        <h1>Смена аккаунта</h1>
+        <h1>Voskresensky Studio</h1>
         <p>Войдите как администратор, менеджер, исполнитель или клиент. После входа система откроет подходящий рабочий раздел.</p>
       </div>
 
@@ -66,12 +66,25 @@
   </main>
 
   <script>
+    const storeKey = "voskresenskyProductionSystem.v2";
     const demoUsers = [
       { email: "admin@voskresensky.ru", password: "admin123", role: "admin", redirect: "index.html" },
       { email: "manager@voskresensky.ru", password: "manager123", role: "manager", redirect: "index.html" },
-      { email: "alex.camera@mail.ru", password: "cam-4821", role: "performer", redirect: "projects-page.html" },
       { email: "client@veka.ru", password: "vekaclient", role: "client", redirect: "projects-page.html" }
     ];
+    function performerUsersFromStore() {
+      try {
+        const state = JSON.parse(localStorage.getItem(storeKey) || "{}");
+        return (state.performers || []).map((performer) => ({
+          email: performer.email,
+          password: performer.password,
+          role: "performer",
+          redirect: "projects-page.html"
+        }));
+      } catch (error) {
+        return [];
+      }
+    }
 
     document.getElementById("login-form").addEventListener("submit", (event) => {
       event.preventDefault();
@@ -79,7 +92,8 @@
       const error = document.getElementById("error-msg");
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
-      const user = demoUsers.find((item) => item.email === email && item.password === password);
+      const allUsers = [...demoUsers, ...performerUsersFromStore()];
+      const user = allUsers.find((item) => item.email === email && item.password === password);
 
       error.style.display = "none";
       button.disabled = true;

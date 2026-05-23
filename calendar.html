@@ -42,18 +42,22 @@
     </section>
 
     <section class="panel">
-      <div class="toolbar">
-        <button id="cal-prev" class="btn">Назад</button>
-        <button id="cal-today" class="btn btn--ghost">Сегодня</button>
-        <button id="cal-next" class="btn">Вперёд</button>
-        <strong id="calendar-title" class="section-title"></strong>
+      <div class="toolbar calendar-toolbar">
+        <div class="calendar-toolbar__group">
+          <button id="cal-prev" class="btn">Назад</button>
+          <button id="cal-today" class="btn btn--ghost">Сегодня</button>
+          <button id="cal-next" class="btn">Вперёд</button>
+        </div>
+        <strong id="calendar-title" class="section-title calendar-toolbar__title"></strong>
         <select id="calendar-view" class="select hide" style="max-width:160px">
           <option value="month">Месяц</option>
           <option value="week">Неделя</option>
           <option value="day">День по часам</option>
         </select>
-        <select id="calendar-project" class="select" style="max-width:220px"></select>
-        <select id="calendar-performer" class="select" style="max-width:220px"></select>
+        <div class="calendar-toolbar__filters">
+          <select id="calendar-project" class="select calendar-filter"></select>
+          <select id="calendar-performer" class="select calendar-filter"></select>
+        </div>
         <div class="calendar-view-switch" aria-label="Переключение вида календаря">
           <button class="calendar-view-switch__btn active" data-calendar-mode="month">Месяц</button>
           <button class="calendar-view-switch__btn" data-calendar-mode="week">Неделя</button>

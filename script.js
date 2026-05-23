@@ -1,16 +1,41 @@
 const API_READY_DATA_MODEL = {
   Performer: "id, name, role, email, password, rate, activeProjectsCount, completedProjectsCount, nearestDeadline, status, contacts, notes",
-  Project: "id, title, client, description, status, startDate, draftDeadline, finalDeadline, shootingDates, location, coordinates, performers, clientPayment, expenses, equipment, files, chat, profit",
-  Expense: "id, projectId|null, category, title, amount, date, comment, receiptFile, type",
-  EquipmentItem: "id, name, quantity, pricePerUnit, rentalDays, totalPrice",
-  CalendarEvent: "id, title, description, startDateTime, endDateTime, projectId, performerId, status, priority, type",
+  Project: "id, title, client, description, status, startDate, draftDeadline, finalDeadline, shootingDates, location, coordinates, performers, clientPayment, payments, expenses, equipment, files, chat, profit",
+  Expense: "id, projectId|null, category, title, amount, date, paidAt, paymentMethod, comment, receiptFile, type",
+  EquipmentItem: "id, name, category, quantity, pricePerUnit, rentalDays, receiptFile, totalPrice",
+  CalendarEvent: "id, title, description, startDateTime, endDateTime, allDay, projectId, performerId, status, priority, type",
   FinanceDocument: "id, projectId|null, type, title, amount, date, pdfFile, receiptFile, myTaxLink, comment",
   MapPoint: "id, projectId, title, location, coordinates, shootingDateStart, shootingDateEnd, status"
 };
 
 const storeKey = "voskresenskyProductionSystem.v2";
 const expenseCategories = ["Аренда оборудования", "Транспорт", "Монтаж", "Цветокоррекция", "Звук", "Музыка", "Реквизит", "Локация", "Питание", "Подписки", "Офис", "Реклама", "Прочее"];
-const typicalExpenses = ["Камера Sony FX6", "Операторская смена", "Такси на площадку", "Монтаж ролика", "Цветокоррекция", "Музыкальная лицензия", "Аренда студии", "Кейтеринг", "PDF-счёт", "Самозанятый чек", "Своя трата"];
+const paymentMethods = ["Перевод", "Наличные", "Работа по ИП", "Самозанятость", "Карта"];
+const fileCategories = ["Чек", "Видео", "ТЗ", "Сценарий", "Счёт", "Акт", "PDF", "Документ"];
+const expenseTemplateCatalog = {
+  "Аренда оборудования": ["Камера Sony FX6", "Камера Sony A7S III", "Комплект света Aputure", "DJI RS 4 Pro", "Набор петличек"],
+  "Транспорт": ["Такси на площадку", "Грузовой каршеринг", "Трансфер команды"],
+  "Монтаж": ["Монтаж черновика", "Финальный монтаж", "Адаптация под reels"],
+  "Цветокоррекция": ["Цветокоррекция выпуска", "LUT и тестовый проход"],
+  "Звук": ["Запись интервью", "Чистка звука", "Сведение"],
+  "Музыка": ["Музыкальная лицензия", "Подбор музыки"],
+  "Реквизит": ["Покупка реквизита", "Аренда реквизита"],
+  "Локация": ["Аренда студии", "Аренда площадки", "Согласование площадки"],
+  "Питание": ["Кейтеринг", "Кофе и вода", "Обед команде"],
+  "Подписки": ["Музыкальная библиотека", "Frame.io", "Dropbox"],
+  "Офис": ["Коворкинг", "Интернет", "Печать документов"],
+  "Реклама": ["Таргет", "Продвижение кейса", "Реклама в соцсетях"],
+  "Прочее": ["PDF-счёт", "Самозанятый чек", "Своя трата"]
+};
+const defaultEquipmentPresets = [
+  { name: "Sony FX6", category: "Камера", pricePerUnit: 9000 },
+  { name: "Sony A7S III", category: "Камера", pricePerUnit: 6500 },
+  { name: "Комплект света Aputure", category: "Свет", pricePerUnit: 3500 },
+  { name: "DJI RS 4 Pro", category: "Стабилизация", pricePerUnit: 4500 },
+  { name: "Zoom F6", category: "Звук", pricePerUnit: 2800 },
+  { name: "Sennheiser EW-DP", category: "Звук", pricePerUnit: 2500 }
+];
+const equipmentCategories = ["Камера", "Свет", "Звук", "Стабилизация", "Объективы", "Другое"];
 
 const mockData = {
   performers: [
@@ -35,17 +60,23 @@ const mockData = {
       coordinates: [55.7558, 37.6176],
       performers: ["pf-1", "pf-2", "pf-4"],
       clientPayment: 420000,
+      payments: [
+        { id: "pay-1", date: "2026-05-18", amount: 210000, method: "Перевод", comment: "Предоплата 50%" },
+        { id: "pay-2", date: "2026-06-04", amount: 210000, method: "Работа по ИП", comment: "Финальный платёж после сдачи" }
+      ],
       expenses: [
-        { id: "ex-1", projectId: "pr-1", category: "Монтаж", title: "Монтаж черновика", amount: 48000, date: "2026-05-24", comment: "Первая версия для клиента", receiptFile: "edit-invoice.pdf", type: "project" },
-        { id: "ex-2", projectId: "pr-1", category: "Транспорт", title: "Логистика команды", amount: 9500, date: "2026-05-21", comment: "Такси и грузовой каршеринг", receiptFile: "transport-check.pdf", type: "project" }
+        { id: "ex-1", projectId: "pr-1", category: "Монтаж", title: "Монтаж черновика", amount: 48000, date: "2026-05-24", paidAt: "2026-05-25", paymentMethod: "Перевод", comment: "Первая версия для клиента", receiptFile: "edit-invoice.pdf", type: "project" },
+        { id: "ex-2", projectId: "pr-1", category: "Транспорт", title: "Логистика команды", amount: 9500, date: "2026-05-21", paidAt: "2026-05-21", paymentMethod: "Карта", comment: "Такси и грузовой каршеринг", receiptFile: "transport-check.pdf", type: "project" },
+        { id: "ex-2b", projectId: "pr-1", category: "Подписки", title: "Frame.io на проект", amount: 3200, date: "2026-05-19", paidAt: "2026-05-19", paymentMethod: "Карта", comment: "Доступ для клиента и команды", receiptFile: "frameio-veka.pdf", type: "project" }
       ],
       equipment: [
-        { id: "eq-1", name: "Sony FX6", quantity: 1, pricePerUnit: 9000, rentalDays: 2 },
-        { id: "eq-2", name: "Комплект света Aputure", quantity: 2, pricePerUnit: 3500, rentalDays: 2 }
+        { id: "eq-1", name: "Sony FX6", category: "Камера", quantity: 1, pricePerUnit: 9000, rentalDays: 2, receiptFile: "fx6-rent.pdf" },
+        { id: "eq-2", name: "Комплект света Aputure", category: "Свет", quantity: 2, pricePerUnit: 3500, rentalDays: 2, receiptFile: "aputure-rent.pdf" }
       ],
       files: [
-        { id: "fl-1", category: "ТЗ", title: "brief-veka.pdf", url: "#", date: "2026-05-18" },
-        { id: "fl-2", category: "Чек", title: "transport-check.pdf", url: "#", date: "2026-05-21" }
+        { id: "fl-1", category: "ТЗ", title: "brief-veka.pdf", url: "#", date: "2026-05-18", note: "Техническое задание от клиента" },
+        { id: "fl-2", category: "Чек", title: "transport-check.pdf", url: "#", date: "2026-05-21", note: "Логистика команды" },
+        { id: "fl-3a", category: "Счёт", title: "invoice-veka-50.pdf", url: "#", date: "2026-05-18", note: "Предоплата" }
       ],
       chat: [
         { author: "Екатерина Соколова", role: "Продюсер", time: "10:15", text: "Клиент подтвердил второй съёмочный день, пропуск на всех готов." },
@@ -66,13 +97,16 @@ const mockData = {
       coordinates: [59.9242, 30.2412],
       performers: ["pf-1", "pf-3"],
       clientPayment: 280000,
+      payments: [
+        { id: "pay-3", date: "2026-05-24", amount: 140000, method: "Перевод", comment: "Аванс на препрод" }
+      ],
       expenses: [
-        { id: "ex-3", projectId: "pr-2", category: "Музыка", title: "Лицензия на трек", amount: 12000, date: "2026-05-24", comment: "Коммерческое использование", receiptFile: "music-license.pdf", type: "project" }
+        { id: "ex-3", projectId: "pr-2", category: "Музыка", title: "Лицензия на трек", amount: 12000, date: "2026-05-24", paidAt: "2026-05-24", paymentMethod: "Карта", comment: "Коммерческое использование", receiptFile: "music-license.pdf", type: "project" }
       ],
       equipment: [
-        { id: "eq-3", name: "DJI RS 4 Pro", quantity: 1, pricePerUnit: 4500, rentalDays: 1 }
+        { id: "eq-3", name: "DJI RS 4 Pro", category: "Стабилизация", quantity: 1, pricePerUnit: 4500, rentalDays: 1, receiptFile: "" }
       ],
-      files: [{ id: "fl-3", category: "Сценарий", title: "startupx-script.docx", url: "#", date: "2026-05-23" }],
+      files: [{ id: "fl-3", category: "Сценарий", title: "startupx-script.docx", url: "#", date: "2026-05-23", note: "Основной сценарий продукта" }],
       chat: [{ author: "Дмитрий Волков", role: "Звукорежиссёр", time: "09:20", text: "Возьму петлички и рекордер, на площадке может быть шумно." }]
     },
     {
@@ -89,12 +123,15 @@ const mockData = {
       coordinates: [55.5175, 37.9606],
       performers: ["pf-2", "pf-5"],
       clientPayment: 190000,
+      payments: [
+        { id: "pay-4", date: "2026-05-11", amount: 190000, method: "Наличные", comment: "Оплата одной суммой" }
+      ],
       expenses: [
-        { id: "ex-4", projectId: "pr-3", category: "Цветокоррекция", title: "Цвет выпуска", amount: 26000, date: "2026-05-22", comment: "DaVinci project", receiptFile: "color.pdf", type: "project" },
-        { id: "ex-5", projectId: "pr-3", category: "Питание", title: "Питание на площадке", amount: 7800, date: "2026-05-12", comment: "Команда 6 человек", receiptFile: "food.pdf", type: "project" }
+        { id: "ex-4", projectId: "pr-3", category: "Цветокоррекция", title: "Цвет выпуска", amount: 26000, date: "2026-05-22", paidAt: "2026-05-23", paymentMethod: "Перевод", comment: "DaVinci project", receiptFile: "color.pdf", type: "project" },
+        { id: "ex-5", projectId: "pr-3", category: "Питание", title: "Питание на площадке", amount: 7800, date: "2026-05-12", paidAt: "2026-05-12", paymentMethod: "Наличные", comment: "Команда 6 человек", receiptFile: "food.pdf", type: "project" }
       ],
       equipment: [],
-      files: [{ id: "fl-4", category: "Видео", title: "episode3-preview.mp4", url: "#", date: "2026-05-22" }],
+      files: [{ id: "fl-4", category: "Видео", title: "episode3-preview.mp4", url: "#", date: "2026-05-22", note: "Черновой экспорт для согласования" }],
       chat: [{ author: "Иван Морозов", role: "Колорист", time: "18:05", text: "Первый проход по цвету готов, отправил превью." }]
     }
   ],
@@ -109,6 +146,7 @@ const mockData = {
     { id: "doc-3", projectId: null, type: "PDF", title: "Музыкальная подписка", amount: 6900, date: "2026-05-05", pdfFile: "music-sub.pdf", receiptFile: "music-sub.pdf", myTaxLink: "", comment: "Общая трата" }
   ],
   events: [
+    { id: "ev-day-1", title: "Напомнить клиенту про акт и финальный счёт", description: "Проверить документы по VEKA до конца дня", startDateTime: "2026-05-23T00:00", endDateTime: "2026-05-23T23:59", allDay: true, projectId: "pr-1", performerId: "pf-4", status: "Запланировано", priority: "Высокий", type: "task" },
     { id: "ev-today-1", title: "Утренний созвон по VEKA", description: "Сверить план монтажа и список правок", startDateTime: "2026-05-23T10:00", endDateTime: "2026-05-23T10:45", projectId: "pr-1", performerId: "pf-2", status: "Запланировано", priority: "Высокий", type: "meeting" },
     { id: "ev-today-2", title: "Внутренний дедлайн по сценарию", description: "Подготовить финальную версию сценарного плана", startDateTime: "2026-05-23T13:00", endDateTime: "2026-05-23T14:00", projectId: "pr-2", performerId: "pf-4", status: "В работе", priority: "Средний", type: "deadline" },
     { id: "ev-today-3", title: "Проверка материалов AutoBlog", description: "Отобрать удачные дубли и отметить проблемные кадры", startDateTime: "2026-05-23T16:30", endDateTime: "2026-05-23T18:00", projectId: "pr-3", performerId: "pf-5", status: "Запланировано", priority: "Средний", type: "task" },
@@ -134,6 +172,9 @@ let financeCharts = {};
 let projectView = "active";
 let projectLocationMap = null;
 let projectLocationMarker = null;
+let financeChartPeriod = "6m";
+let financeCategoryFilter = "";
+let modalBackAction = null;
 const markerVisibleZoom = 10;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -157,6 +198,11 @@ function loadState() {
 function migrateState(nextState) {
   nextState.projects = nextState.projects || [];
   nextState.events = nextState.events || [];
+  nextState.generalExpenses = nextState.generalExpenses || [];
+  nextState.documents = nextState.documents || [];
+  nextState.catalogs = nextState.catalogs || {};
+  nextState.catalogs.expenseTemplates = mergeExpenseTemplateCatalog(nextState.catalogs.expenseTemplates);
+  nextState.catalogs.equipmentPresets = mergeEquipmentPresets(nextState.catalogs.equipmentPresets);
   const archivedSeeds = archivedProjectSeeds();
   archivedSeeds.forEach((project) => {
     if (!nextState.projects.some((item) => item.id === project.id)) {
@@ -168,16 +214,102 @@ function migrateState(nextState) {
       nextState.events.push(event);
     }
   });
+  nextState.events = nextState.events.map((event) => ({
+    ...event,
+    allDay: Boolean(event.allDay)
+  }));
   nextState.projects.forEach((project) => {
+    project.payments = normalizeProjectPayments(project);
+    project.expenses = (project.expenses || []).map(normalizeExpense);
+    project.equipment = (project.equipment || []).map(normalizeEquipmentItem);
+    project.files = (project.files || []).map(normalizeProjectFile);
     if (project.status === "Завершён" && !project.archivedAt) {
       project.archivedAt = project.finalDeadline || project.startDate || localISODate();
     }
   });
+  nextState.generalExpenses = nextState.generalExpenses.map(normalizeExpense);
+  nextState.documents = nextState.documents.map(normalizeDocument);
   localStorage.setItem(storeKey, JSON.stringify(nextState));
   return nextState;
 }
+function mergeExpenseTemplateCatalog(existing = {}) {
+  return expenseCategories.reduce((acc, category) => {
+    acc[category] = [...new Set([...(expenseTemplateCatalog[category] || []), ...(existing[category] || [])])];
+    return acc;
+  }, {});
+}
+function mergeEquipmentPresets(existing = []) {
+  const map = new Map();
+  [...defaultEquipmentPresets, ...existing].forEach((preset) => {
+    if (!preset?.name) return;
+    map.set(preset.name.toLowerCase(), {
+      name: preset.name,
+      category: preset.category || "Другое",
+      pricePerUnit: Number(preset.pricePerUnit || 0)
+    });
+  });
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "ru"));
+}
+function normalizeProjectPayments(project) {
+  if (project.payments?.length) {
+    return project.payments.map((payment, index) => ({
+      id: payment.id || `pay-${project.id}-${index + 1}`,
+      date: payment.date || project.startDate || localISODate(),
+      amount: Number(payment.amount || 0),
+      method: payment.method || "Перевод",
+      comment: payment.comment || ""
+    }));
+  }
+  return [{
+    id: `pay-${project.id}-1`,
+    date: project.startDate || localISODate(),
+    amount: Number(project.clientPayment || 0),
+    method: "Перевод",
+    comment: "Основная оплата клиента"
+  }];
+}
+function normalizeExpense(expense) {
+  return {
+    ...expense,
+    amount: Number(expense.amount || 0),
+    paidAt: expense.paidAt || expense.date || localISODate(),
+    paymentMethod: expense.paymentMethod || "Перевод",
+    receiptFile: expense.receiptFile || ""
+  };
+}
+function normalizeEquipmentItem(item) {
+  return {
+    ...item,
+    category: item.category || guessEquipmentCategory(item.name),
+    quantity: Number(item.quantity || 1),
+    pricePerUnit: Number(item.pricePerUnit || 0),
+    rentalDays: Number(item.rentalDays || 1),
+    receiptFile: item.receiptFile || "",
+    totalPrice: Number(item.quantity || 1) * Number(item.pricePerUnit || 0) * Number(item.rentalDays || 1)
+  };
+}
+function normalizeProjectFile(file) {
+  const title = file.title || "Документ без имени";
+  return {
+    ...file,
+    title,
+    date: file.date || localISODate(),
+    note: file.note || "",
+    url: file.url && file.url !== "#" ? file.url : buildMockDownloadUrl(title, file.note || "Файл проекта")
+  };
+}
+function normalizeDocument(doc) {
+  return {
+    ...doc,
+    pdfFile: doc.pdfFile || "",
+    receiptFile: doc.receiptFile || "",
+    myTaxLink: doc.myTaxLink || "",
+    comment: doc.comment || ""
+  };
+}
 function todayCalendarSeeds() {
   return [
+    { id: "ev-day-1", title: "Напомнить клиенту про акт и финальный счёт", description: "Проверить документы по VEKA до конца дня", startDateTime: "2026-05-23T00:00", endDateTime: "2026-05-23T23:59", allDay: true, projectId: "pr-1", performerId: "pf-4", status: "Запланировано", priority: "Высокий", type: "task" },
     { id: "ev-today-1", title: "Утренний созвон по VEKA", description: "Сверить план монтажа и список правок", startDateTime: "2026-05-23T10:00", endDateTime: "2026-05-23T10:45", projectId: "pr-1", performerId: "pf-2", status: "Запланировано", priority: "Высокий", type: "meeting" },
     { id: "ev-today-2", title: "Внутренний дедлайн по сценарию", description: "Подготовить финальную версию сценарного плана", startDateTime: "2026-05-23T13:00", endDateTime: "2026-05-23T14:00", projectId: "pr-2", performerId: "pf-4", status: "В работе", priority: "Средний", type: "deadline" },
     { id: "ev-today-3", title: "Проверка материалов AutoBlog", description: "Отобрать удачные дубли и отметить проблемные кадры", startDateTime: "2026-05-23T16:30", endDateTime: "2026-05-23T18:00", projectId: "pr-3", performerId: "pf-5", status: "Запланировано", priority: "Средний", type: "task" }
@@ -239,9 +371,16 @@ function saveState() {
 }
 function hydrateDerivedData() {
   state.projects.forEach((project) => {
-    project.equipment = (project.equipment || []).map((item) => ({ ...item, totalPrice: Number(item.quantity) * Number(item.pricePerUnit) * Number(item.rentalDays) }));
-    project.profit = project.clientPayment - projectExpenses(project);
+    project.calendarAssignments = project.calendarAssignments || {};
+    project.calendarEventOverrides = project.calendarEventOverrides || {};
+    project.payments = normalizeProjectPayments(project);
+    project.expenses = (project.expenses || []).map(normalizeExpense);
+    project.equipment = (project.equipment || []).map(normalizeEquipmentItem);
+    project.files = (project.files || []).map(normalizeProjectFile);
+    project.profit = projectIncome(project) - projectExpenses(project);
   });
+  state.generalExpenses = (state.generalExpenses || []).map(normalizeExpense);
+  state.documents = (state.documents || []).map(normalizeDocument);
   state.performers.forEach((performer) => {
     const related = state.projects.filter((project) => project.performers.includes(performer.id));
     performer.activeProjectsCount = related.filter((project) => project.status !== "Завершён").length;
@@ -250,7 +389,28 @@ function hydrateDerivedData() {
   });
 }
 function allExpenses() {
-  return [...state.projects.flatMap((project) => project.expenses || []), ...(state.generalExpenses || [])];
+  return [...state.projects.flatMap((project) => projectExpenseRows(project)), ...(state.generalExpenses || [])];
+}
+function projectIncome(project) {
+  const paymentsTotal = (project.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  return paymentsTotal || Number(project.clientPayment || 0);
+}
+function projectExpenseRows(project) {
+  const directExpenses = (project.expenses || []).map((expense) => ({ ...expense, type: expense.type || "project" }));
+  const equipmentExpenses = (project.equipment || []).map((item) => ({
+    id: `eq-exp-${item.id}`,
+    projectId: project.id,
+    category: "Аренда оборудования",
+    title: item.name,
+    amount: Number(item.totalPrice || 0),
+    date: project.shootingDates?.[0]?.start || project.startDate || localISODate(),
+    paidAt: project.shootingDates?.[0]?.start || project.startDate || localISODate(),
+    paymentMethod: "Перевод",
+    comment: `${item.category || "Оборудование"} · ${item.quantity} × ${item.rentalDays} дн.`,
+    receiptFile: item.receiptFile || "",
+    type: "equipment"
+  }));
+  return [...directExpenses, ...equipmentExpenses];
 }
 function projectEquipmentTotal(project) {
   return (project.equipment || []).reduce((sum, item) => sum + Number(item.totalPrice || (item.quantity * item.pricePerUnit * item.rentalDays)), 0);
@@ -259,7 +419,7 @@ function projectExpenses(project) {
   return (project.expenses || []).reduce((sum, expense) => sum + Number(expense.amount), 0) + projectEquipmentTotal(project);
 }
 function totals() {
-  const income = state.projects.reduce((sum, project) => sum + Number(project.clientPayment || 0), 0);
+  const income = state.projects.reduce((sum, project) => sum + projectIncome(project), 0);
   const projectCosts = state.projects.reduce((sum, project) => sum + projectExpenses(project), 0);
   const generalCosts = (state.generalExpenses || []).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   return { income, expenses: projectCosts + generalCosts, profit: income - projectCosts - generalCosts, projectCosts, generalCosts };
@@ -274,6 +434,17 @@ function formatDate(value) {
 function formatDateTime(value) {
   return new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
+function formatTime(value) {
+  return new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+}
+function eventTimeLabel(event, options = {}) {
+  if (!event) return "";
+  if (event.allDay) {
+    return options.withDate ? `${formatDate(event.startDateTime.slice(0, 10))} · весь день` : "Весь день";
+  }
+  const timeRange = `${formatTime(event.startDateTime)} - ${formatTime(event.endDateTime)}`;
+  return options.withDate ? `${formatDate(event.startDateTime.slice(0, 10))} · ${timeRange}` : timeRange;
+}
 function localISODate(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -286,15 +457,57 @@ function uid(prefix) {
 function byId(id) { return document.getElementById(id); }
 function projectById(id) { return state.projects.find((project) => project.id === id); }
 function performerById(id) { return state.performers.find((performer) => performer.id === id); }
+function buildMockDownloadUrl(title, note = "") {
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(`Voskresensky Production System\nФайл: ${title}\n${note}`)}`;
+}
+function guessEquipmentCategory(name = "") {
+  const lower = name.toLowerCase();
+  if (lower.includes("sony") || lower.includes("camera") || lower.includes("камера")) return "Камера";
+  if (lower.includes("light") || lower.includes("aputure") || lower.includes("свет")) return "Свет";
+  if (lower.includes("zoom") || lower.includes("sennheiser") || lower.includes("sound") || lower.includes("звук")) return "Звук";
+  if (lower.includes("dji") || lower.includes("gimbal") || lower.includes("стед") || lower.includes("стаб")) return "Стабилизация";
+  if (lower.includes("lens") || lower.includes("объектив")) return "Объективы";
+  return "Другое";
+}
+function getExpenseTemplates(category) {
+  return state.catalogs?.expenseTemplates?.[category] || expenseTemplateCatalog[category] || [];
+}
+function rememberExpenseTemplate(category, title) {
+  const cleanTitle = String(title || "").trim();
+  if (!category || !cleanTitle) return;
+  state.catalogs.expenseTemplates = state.catalogs.expenseTemplates || mergeExpenseTemplateCatalog();
+  const items = new Set(getExpenseTemplates(category));
+  items.add(cleanTitle);
+  state.catalogs.expenseTemplates[category] = [...items].sort((a, b) => a.localeCompare(b, "ru"));
+}
+function equipmentPresets() {
+  return state.catalogs?.equipmentPresets || defaultEquipmentPresets;
+}
+function equipmentPresetByName(name) {
+  return equipmentPresets().find((preset) => preset.name.toLowerCase() === String(name || "").trim().toLowerCase());
+}
+function rememberEquipmentPreset(name, category, pricePerUnit) {
+  const cleanName = String(name || "").trim();
+  if (!cleanName) return;
+  const map = new Map(equipmentPresets().map((preset) => [preset.name.toLowerCase(), preset]));
+  map.set(cleanName.toLowerCase(), { name: cleanName, category: category || guessEquipmentCategory(cleanName), pricePerUnit: Number(pricePerUnit || 0) });
+  state.catalogs.equipmentPresets = [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "ru"));
+}
 function escapeHtml(text = "") {
   return String(text).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+}
+function editIconButton(onclick, label = "Редактировать") {
+  return `<button class="icon-btn" type="button" title="${label}" aria-label="${label}" onclick="${onclick}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4.7L19.4 9.3a2.1 2.1 0 0 0 0-3l-1.7-1.7a2.1 2.1 0 0 0-3 0L4 15.3V20Zm11.2-14 2.8 2.8M13.9 7.3l2.8 2.8"/></svg>
+  </button>`;
 }
 
 function bindGlobalActions() {
   document.addEventListener("click", (event) => {
-    const target = event.target.closest("[data-action], [data-export], [data-close-modal]");
+    const target = event.target.closest("[data-action], [data-export], [data-close-modal], [data-modal-back]");
     if (!target) return;
     if (target.dataset.closeModal !== undefined) closeModal();
+    if (target.dataset.modalBack !== undefined) goBackModal();
     if (target.dataset.export) exportDataset(target.dataset.export);
     if (target.dataset.action === "open-performer-create") openPerformerForm();
     if (target.dataset.action === "open-project-create") openProjectForm();
@@ -309,12 +522,16 @@ function bindGlobalActions() {
 function openModal(title, body, options = {}) {
   const modal = byId("app-modal");
   if (!modal) return;
+  modalBackAction = typeof options.backAction === "function" ? options.backAction : null;
   modal.innerHTML = `
     <div class="modal__content ${options.wide ? "modal__content--wide" : ""}">
       <div class="modal__head">
-        <div>
+        <div class="modal__head-main">
+          ${modalBackAction ? `<button class="modal-back-btn" type="button" data-modal-back>${options.backLabel || "Назад"}</button>` : ""}
+          <div>
           <h2 class="modal__title">${title}</h2>
           ${options.note ? `<p class="section-note">${options.note}</p>` : ""}
+          </div>
         </div>
         <button class="close-btn" data-close-modal aria-label="Закрыть">×</button>
       </div>
@@ -322,13 +539,34 @@ function openModal(title, body, options = {}) {
     </div>`;
   modal.classList.add("is-open");
   modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  if (options.scrollTop !== undefined) {
+    requestAnimationFrame(() => {
+      const content = modal.querySelector(".modal__content");
+      if (content) content.scrollTop = options.scrollTop;
+    });
+  }
 }
 function closeModal() {
   const modal = byId("app-modal");
   if (!modal) return;
+  modalBackAction = null;
   modal.classList.remove("is-open");
   modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
   modal.innerHTML = "";
+}
+function goBackModal() {
+  if (typeof modalBackAction === "function") {
+    const action = modalBackAction;
+    modalBackAction = null;
+    action();
+    return;
+  }
+  closeModal();
+}
+function currentModalScrollTop() {
+  return document.querySelector("#app-modal .modal__content")?.scrollTop || 0;
 }
 
 function renderKpis(root, items) {
@@ -383,9 +621,12 @@ function renderPerformersPage() {
     { label: "Закрыто проектов", value: state.performers.reduce((s, p) => s + p.completedProjectsCount, 0), meta: "Суммарный опыт базы" }
   ]);
   const roleSelect = byId("performer-role");
-  roleSelect.innerHTML = `<option value="">Все роли</option>${[...new Set(state.performers.map((p) => p.role))].map((role) => `<option>${role}</option>`).join("")}`;
+  roleSelect.innerHTML = `<option value="">Все роли</option>${performerRoleOptions().map((role) => `<option>${role}</option>`).join("")}`;
   ["performer-search", "performer-role", "performer-status", "performer-sort"].forEach((id) => byId(id).addEventListener("input", renderPerformerCards));
   renderPerformerCards();
+}
+function performerRoleOptions() {
+  return [...new Set(state.performers.map((performer) => performer.role).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ru"));
 }
 function renderPerformerCards() {
   const search = byId("performer-search").value.toLowerCase();
@@ -428,10 +669,14 @@ function statusClass(status) {
   if (status === "Завершён") return "status--done";
   return "";
 }
-function openPerformerDetails(id) {
+function openPerformerDetails(id, options = {}) {
   const p = performerById(id);
   const projects = state.projects.filter((project) => project.performers.includes(id));
   openModal(p.name, `
+    <div class="tabs">
+      <button class="tab active">Карточка исполнителя</button>
+      ${editIconButton(`openPerformerForm('${p.id}', ${currentModalScrollTop()})`)}
+    </div>
     <div class="grid grid--2">
       <div class="panel">
         <p><strong>Роль:</strong> ${p.role}</p><p><strong>Email:</strong> ${p.email}</p><p><strong>Пароль для выдачи:</strong> ${p.password}</p>
@@ -441,27 +686,79 @@ function openPerformerDetails(id) {
         <h3 class="section-title">Проекты исполнителя</h3>
         <div class="list" style="margin-top:12px">${projects.map((project) => `<div class="list-item"><div><strong>${project.title}</strong><p class="list-item__text">${project.client}</p></div><span class="status">${project.status}</span></div>`).join("") || "Пока нет проектов"}</div>
       </div>
-    </div>`, { note: "Подробная карточка готова к привязке к backend/API.", wide: true });
+    </div>`, { note: "Подробная карточка готова к привязке к backend/API.", wide: true, scrollTop: options.scrollTop });
 }
-function openPerformerForm() {
-  openModal("Добавить исполнителя", `
+function openPerformerForm(id = null, sourceScrollTop = null) {
+  const performer = id ? performerById(id) : null;
+  const roles = performerRoleOptions();
+  const performerRole = performer?.role || "";
+  const useCustomRole = performerRole && !roles.includes(performerRole);
+  const selectedRole = performer ? (useCustomRole ? "__custom__" : performerRole) : (roles[0] || "__custom__");
+  openModal(performer ? "Редактировать исполнителя" : "Добавить исполнителя", `
     <form id="performer-form" class="form-grid">
-      ${input("name", "Имя", "text", true)}
-      ${input("role", "Роль", "text", true)}
-      ${input("email", "Email", "email", true)}
-      ${input("password", "Пароль для исполнителя", "text", true)}
-      ${input("rate", "Ставка", "number", true)}
-      ${input("contacts", "Контактные данные", "text", true)}
-      <div class="form-row"><label>Статус</label><select name="status" class="select"><option>Свободен</option><option>Занят</option><option>На проекте</option></select></div>
-      <div class="form-row"><label>Ближайший дедлайн</label><input name="nearestDeadline" class="input" type="date"></div>
-      <div class="form-row form-row--wide"><label>Комментарий</label><textarea name="notes" class="textarea"></textarea></div>
-      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green" type="submit">Сохранить</button><button class="btn" type="button" data-close-modal>Отменить</button></div>
-    </form>`);
+      ${input("name", "Имя", "text", true, performer?.name || "")}
+      <div class="form-row">
+        <label>Роль</label>
+        <select name="roleSelect" id="performer-role-select" class="select" required>
+          ${roles.map((role) => `<option value="${escapeHtml(role)}" ${selectedRole === role ? "selected" : ""}>${escapeHtml(role)}</option>`).join("")}
+          <option value="__custom__" ${selectedRole === "__custom__" ? "selected" : ""}>Другая роль...</option>
+        </select>
+      </div>
+      <div class="form-row ${selectedRole === "__custom__" ? "" : "hide"}" id="performer-custom-role-row">
+        <label>Новая роль</label>
+        <input name="customRole" id="performer-custom-role" class="input" type="text" placeholder="Например, режиссёр монтажа" value="${useCustomRole ? escapeHtml(performerRole) : ""}">
+      </div>
+      ${input("email", "Email", "email", true, performer?.email || "")}
+      ${input("password", "Пароль для исполнителя", "text", true, performer?.password || "")}
+      ${input("rate", "Ставка", "number", true, performer?.rate || "")}
+      ${input("contacts", "Контактные данные", "text", true, performer?.contacts || "")}
+      <div class="form-row"><label>Статус</label><select name="status" class="select"><option ${performer?.status === "Свободен" || !performer ? "selected" : ""}>Свободен</option><option ${performer?.status === "Занят" ? "selected" : ""}>Занят</option><option ${performer?.status === "На проекте" ? "selected" : ""}>На проекте</option></select></div>
+      <div class="form-row"><label>Ближайший дедлайн</label><input name="nearestDeadline" class="input" type="date" value="${performer?.nearestDeadline || ""}"></div>
+      <div class="form-row form-row--wide"><label>Комментарий</label><textarea name="notes" class="textarea">${performer?.notes || ""}</textarea></div>
+      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green" type="submit">${performer ? "Сохранить изменения" : "Сохранить"}</button><button class="btn" type="button" data-close-modal>${performer ? "Закрыть" : "Отменить"}</button></div>
+    </form>`, performer ? {
+      backAction: () => openPerformerDetails(performer.id, { scrollTop: sourceScrollTop ?? 0 })
+    } : {});
+  const roleSelect = byId("performer-role-select");
+  const customRoleRow = byId("performer-custom-role-row");
+  const customRoleInput = byId("performer-custom-role");
+  customRoleInput.required = selectedRole === "__custom__";
+  roleSelect.addEventListener("change", () => {
+    const isCustom = roleSelect.value === "__custom__";
+    customRoleRow.classList.toggle("hide", !isCustom);
+    customRoleInput.required = isCustom;
+    if (!isCustom) customRoleInput.value = "";
+  });
   byId("performer-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    state.performers.push({ id: uid("pf"), ...data, rate: Number(data.rate), activeProjectsCount: 0, completedProjectsCount: 0 });
+    const role = data.roleSelect === "__custom__" ? data.customRole.trim() : data.roleSelect;
+    if (!role) {
+      customRoleInput.focus();
+      return;
+    }
+    const nextPerformer = {
+      id: performer?.id || uid("pf"),
+      name: data.name,
+      role,
+      email: data.email,
+      password: data.password,
+      rate: Number(data.rate),
+      contacts: data.contacts,
+      status: data.status,
+      nearestDeadline: data.nearestDeadline,
+      notes: data.notes,
+      activeProjectsCount: performer?.activeProjectsCount || 0,
+      completedProjectsCount: performer?.completedProjectsCount || 0
+    };
+    if (performer) state.performers[state.performers.findIndex((item) => item.id === performer.id)] = nextPerformer;
+    else state.performers.push(nextPerformer);
     saveState();
+    if (performer) {
+      openPerformerDetails(performer.id, { scrollTop: sourceScrollTop ?? 0 });
+      rerenderCurrentPage();
+      return;
+    }
     closeModal();
     rerenderCurrentPage();
   });
@@ -514,7 +811,10 @@ function renderProjectCards() {
   byId("projects-grid").innerHTML = list.map(projectCard).join("") || `<div class="empty">${projectView === "archive" ? "В архиве пока нет проектов." : "Активные проекты не найдены."}</div>`;
 }
 function projectCard(project) {
-  const margin = project.clientPayment ? Math.round((project.profit / project.clientPayment) * 100) : 0;
+  const income = projectIncome(project);
+  const margin = income ? Math.round((project.profit / income) * 100) : 0;
+  const taskCount = projectTaskEvents(project.id).length;
+  const nearestTask = nearestProjectTask(project.id);
   return `
     <article class="card project-card clickable" onclick="openProjectDetails('${project.id}')">
       <div class="card-top">
@@ -523,26 +823,132 @@ function projectCard(project) {
       </div>
       <p class="section-note">${project.description}</p>
       <div class="stats-row">
-        <div class="mini-stat"><span>Оплата</span><strong>${formatMoney(project.clientPayment)}</strong></div>
+        <div class="mini-stat"><span>Поступило</span><strong>${formatMoney(income)}</strong></div>
         <div class="mini-stat"><span>Расходы</span><strong>${formatMoney(projectExpenses(project))}</strong></div>
         <div class="mini-stat"><span>Прибыль</span><strong class="${project.profit >= 0 ? "money-positive" : "money-negative"}">${formatMoney(project.profit)}</strong></div>
       </div>
       <div class="progress"><span style="width:${Math.max(0, Math.min(100, margin))}%"></span></div>
       <div class="inline-actions">${project.performers.map((id) => `<span class="pill">${performerById(id)?.role || "Исполнитель"}</span>`).join("")}</div>
+      <div class="list-item"><span>Задачи проекта</span><strong>${taskCount}</strong></div>
+      ${nearestTask ? `<div class="task-inline"><strong>${escapeHtml(nearestTask.title)}</strong><span>${eventTimeLabel(nearestTask, { withDate: true })} · ${performerById(nearestTask.performerId)?.name || "Не назначен"}</span></div>` : `<div class="task-inline"><strong>Задач пока нет</strong><span>Добавь первую задачу в проект</span></div>`}
       <div class="list-item"><span>Черновик: ${formatDate(project.draftDeadline)}</span><strong>Чистовик: ${formatDate(project.finalDeadline)}</strong></div>
     </article>`;
 }
-function openProjectDetails(id) {
+function projectMargin(project) {
+  const income = projectIncome(project);
+  return income ? Math.round((project.profit / income) * 100) : 0;
+}
+function projectTaskEvents(projectId, options = {}) {
+  const includeAuto = options.includeAuto !== false;
+  return calendarEventsWithDeadlines()
+    .filter((event) => event.projectId === projectId && (includeAuto || !/^(draft-|final-|shoot-)/.test(String(event.id))))
+    .sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+}
+function nearestProjectTask(projectId) {
+  const now = new Date();
+  const list = projectTaskEvents(projectId);
+  return list.find((event) => new Date(event.startDateTime) >= now) || list[0] || null;
+}
+function projectTaskCardHtml(event, projectId) {
+  const performer = performerById(event.performerId);
+  const doneClass = event.status === "Готово" ? "is-done" : "";
+  return `<button class="task-card task-card--${event.type} ${doneClass}" onclick="openEventDetails('${event.id}', '${projectId}', currentModalScrollTop())">
+    <div class="task-card__time">${eventTimeLabel(event, { withDate: true })}</div>
+    <div class="task-card__title">${escapeHtml(event.title)}</div>
+    <div class="task-card__meta">${performer?.name || "Не назначен"} · ${event.status} · ${event.priority}</div>
+  </button>`;
+}
+function projectPaymentRows(project) {
+  return (project.payments || []).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+function projectFinancialBreakdown(project) {
+  return [
+    { label: "Согласованный бюджет", value: formatMoney(project.clientPayment) },
+    { label: "Получено оплат", value: formatMoney(projectIncome(project)) },
+    { label: "Проектные расходы", value: formatMoney((project.expenses || []).reduce((sum, expense) => sum + Number(expense.amount || 0), 0)) },
+    { label: "Аренда техники", value: formatMoney(projectEquipmentTotal(project)) },
+    { label: "Прибыль", value: formatMoney(project.profit), valueClass: project.profit >= 0 ? "money-positive" : "money-negative" },
+    { label: "Маржинальность", value: `${projectMargin(project)}%` }
+  ];
+}
+function fileCardHtml(file) {
+  return `<article class="file-card">
+    <div class="file-card__top">
+      <span class="badge">${file.category}</span>
+      <span class="small">${formatDate(file.date)}</span>
+    </div>
+    <div class="file-card__title">${escapeHtml(file.title)}</div>
+    <p class="file-card__note">${escapeHtml(file.note || "Файл проекта готов к подмене реальной ссылкой из backend/storage.")}</p>
+    <div class="file-card__actions">
+      <a class="btn btn--ghost" href="${file.url}" download="${escapeHtml(file.title)}" onclick="event.stopPropagation()">Скачать</a>
+    </div>
+  </article>`;
+}
+function projectPaymentCardHtml(payment, projectId) {
+  return `<div class="finance-item">
+    <div class="finance-item__main">
+      <div class="finance-item__title">${formatMoney(payment.amount)}</div>
+      <div class="finance-item__meta">${formatDate(payment.date)} · ${payment.method}${payment.comment ? ` · ${escapeHtml(payment.comment)}` : ""}</div>
+    </div>
+    <div class="finance-item__side">
+      <span class="badge badge--green">Оплата</span>
+      ${editIconButton(`openProjectPaymentEdit('${projectId}', '${payment.id}', currentModalScrollTop())`)}
+    </div>
+  </div>`;
+}
+function projectExpenseCardHtml(expense, projectId) {
+  return `<div class="finance-item">
+    <div class="finance-item__main">
+      <div class="finance-item__title">${escapeHtml(expense.title)}</div>
+      <div class="finance-item__meta">${expense.category} · ${formatDate(expense.date)} · ${expense.paymentMethod}${expense.paidAt ? ` · выплата ${formatDate(expense.paidAt)}` : ""}${expense.comment ? ` · ${escapeHtml(expense.comment)}` : ""}</div>
+    </div>
+    <div class="finance-item__side">
+      <strong>${formatMoney(expense.amount)}</strong>
+      ${expense.receiptFile ? `<a href="${buildMockDownloadUrl(expense.receiptFile, expense.comment)}" class="file-link" download="${escapeHtml(expense.receiptFile)}" onclick="event.stopPropagation()">Скачать чек</a>` : `<span class="small">Без чека</span>`}
+      ${editIconButton(`openProjectExpenseEdit('${projectId}', '${expense.id}', currentModalScrollTop())`)}
+    </div>
+  </div>`;
+}
+function projectEquipmentRowHtml(item, projectId) {
+  return `<div class="matrix-row">
+    <div>
+      <strong>${escapeHtml(item.name)}</strong>
+      <p class="list-item__text">${item.category}</p>
+    </div>
+    <span>${item.quantity} шт.</span>
+    <span>${formatMoney(item.pricePerUnit)}</span>
+    <span>${item.rentalDays} дн.</span>
+    <div class="inline-actions"><strong>${formatMoney(item.totalPrice)}</strong>${editIconButton(`openProjectEquipmentEdit('${projectId}', '${item.id}', currentModalScrollTop())`)}</div>
+  </div>`;
+}
+function openProjectDetails(id, options = {}) {
   const project = projectById(id);
-  openModal(project.title, projectDetailsHtml(project), { wide: true, note: "Все блоки рассчитаны на замену mock-данных ответами backend/API." });
+  openModal(project.title, projectDetailsHtml(project), { wide: true, note: "Все блоки рассчитаны на замену mock-данных ответами backend/API.", scrollTop: options.scrollTop });
   bindProjectDetailForms(project.id);
+}
+function refreshProjectDetails(projectId) {
+  openProjectDetails(projectId, { scrollTop: currentModalScrollTop() });
+}
+function removeProjectPerformer(projectId, performerId) {
+  const project = projectById(projectId);
+  if (!project) return;
+  project.performers = (project.performers || []).filter((id) => id !== performerId);
+  Object.keys(project.calendarAssignments || {}).forEach((eventId) => {
+    if (project.calendarAssignments[eventId] === performerId) delete project.calendarAssignments[eventId];
+  });
+  saveState();
+  refreshProjectDetails(projectId);
 }
 function projectDetailsHtml(project) {
   const performerOptions = state.performers.map((p) => `<option value="${p.id}">${p.name} · ${p.role} · ${formatMoney(p.rate)} · ${p.status}</option>`).join("");
+  const income = projectIncome(project);
+  const financials = projectFinancialBreakdown(project);
+  const shootingEnabled = Boolean(project.shootingDates?.length && project.shootingDates?.[0]?.start);
+  const projectTasks = projectTaskEvents(project.id);
   return `
     <div class="tabs">
       <button class="tab active">Карточка проекта</button>
-      <button class="btn btn--ghost" onclick="openProjectForm('${project.id}')">Редактировать</button>
+      ${editIconButton(`openProjectForm('${project.id}', currentModalScrollTop())`)}
       ${isArchivedProject(project) ? `<button class="btn" onclick="restoreProject('${project.id}')">Вернуть в активные</button>` : `<button class="btn btn--green" onclick="archiveProject('${project.id}')">Завершить проект</button>`}
     </div>
     <div class="grid grid--2">
@@ -557,12 +963,9 @@ function projectDetailsHtml(project) {
         </div>
       </div>
       <div class="panel">
-        <h3 class="section-title">Прибыль</h3>
-        <div class="list" style="margin-top:12px">
-          <div class="list-item"><span>Доход</span><strong>${formatMoney(project.clientPayment)}</strong></div>
-          <div class="list-item"><span>Расходы</span><strong>${formatMoney(projectExpenses(project))}</strong></div>
-          <div class="list-item"><span>Прибыль</span><strong>${formatMoney(project.profit)}</strong></div>
-          <div class="list-item"><span>Маржинальность</span><strong>${project.clientPayment ? Math.round(project.profit / project.clientPayment * 100) : 0}%</strong></div>
+        <h3 class="section-title">Финансовый срез</h3>
+        <div class="ledger-grid" style="margin-top:12px">
+          ${financials.map((item) => `<div class="ledger-card"><span>${item.label}</span><strong class="${item.valueClass || ""}">${item.value}</strong></div>`).join("")}
         </div>
       </div>
     </div>
@@ -575,33 +978,68 @@ function projectDetailsHtml(project) {
         </form>
         <div class="list" style="margin-top:12px">${project.performers.map((id) => {
           const p = performerById(id);
-          return `<div class="list-item"><div><strong>${p?.name}</strong><p class="list-item__text">${p?.role} · ${formatMoney(p?.rate)} · ${p?.status}</p></div><span class="badge">Дедлайн ${formatDate(p?.nearestDeadline)}</span></div>`;
+          return `<div class="list-item"><div><strong>${p?.name}</strong><p class="list-item__text">${p?.role} · ${formatMoney(p?.rate)} · ${p?.status}</p></div><div class="inline-actions"><span class="badge">Дедлайн ${formatDate(p?.nearestDeadline)}</span><button class="icon-btn icon-btn--danger" type="button" title="Убрать из проекта" aria-label="Убрать из проекта" onclick="removeProjectPerformer('${project.id}', '${id}')">×</button></div></div>`;
         }).join("")}</div>
+      </div>
+      <div class="panel">
+        <div class="section-head">
+          <div>
+            <h3 class="section-title">Задачи проекта</h3>
+            <p class="section-note">Внутренние задачи, дедлайны и съёмочные события с привязкой к исполнителям.</p>
+          </div>
+          <button class="btn btn--green" onclick="openProjectTaskForm('${project.id}')">Добавить задачу</button>
+        </div>
+        <div class="task-grid">${projectTasks.map((event) => projectTaskCardHtml(event, project.id)).join("") || `<div class="empty">У проекта ещё нет задач.</div>`}</div>
       </div>
       <div class="panel">
         <h3 class="section-title">Файлы проекта</h3>
         <form id="project-file-form" class="form-grid" style="margin-top:12px">
-          <div class="form-row"><label>Категория</label><select name="category" class="select"><option>Чек</option><option>Видео</option><option>ТЗ</option><option>Сценарий</option><option>Документ</option></select></div>
-          <div class="form-row"><label>Файл</label><input name="title" class="input" type="file"></div>
+          <div class="form-row"><label>Категория</label><select name="category" class="select">${fileCategories.map((category) => `<option>${category}</option>`).join("")}</select></div>
+          ${input("note", "Комментарий к файлу", "text", false, "")}
+          <div class="form-row form-row--wide"><label>Файл</label><input name="title" class="input" type="file"></div>
           <div class="form-row form-row--wide"><button class="btn">Прикрепить</button></div>
         </form>
-        <div class="list" style="margin-top:12px">${(project.files || []).map((file) => `<div class="list-item"><span>${file.category}</span><strong>${file.title}</strong></div>`).join("")}</div>
+        <div class="file-grid" style="margin-top:12px">${(project.files || []).map(fileCardHtml).join("") || `<div class="empty">Файлы ещё не загружены.</div>`}</div>
       </div>
       <div class="panel">
         <h3 class="section-title">Оборудование и аренда</h3>
+        <p class="section-note">${shootingEnabled ? "Позиции техники влияют на расходы проекта и сразу учитываются во вкладке «Финансы»." : "Сначала укажи съёмочные даты в проекте, затем здесь можно будет хранить аренду техники."}</p>
         <form id="equipment-form" class="form-grid" style="margin-top:12px">
-          ${input("name", "Название", "text", true)}
+          <div class="form-row">
+            <label>Категория техники</label>
+            <select name="category" class="select">${equipmentCategories.map((category) => `<option>${category}</option>`).join("")}</select>
+          </div>
+          <div class="form-row">
+            <label>Позиция</label>
+            <input name="name" list="equipment-preset-list" class="input" type="text" placeholder="Начни вводить название" required>
+            <datalist id="equipment-preset-list">${equipmentPresets().map((preset) => `<option value="${escapeHtml(preset.name)}">${escapeHtml(preset.category)} · ${formatMoney(preset.pricePerUnit)}</option>`).join("")}</datalist>
+          </div>
           ${input("quantity", "Количество", "number", true, 1)}
           ${input("pricePerUnit", "Цена за единицу", "number", true)}
           ${input("rentalDays", "Дней аренды", "number", true, 1)}
+          <div class="form-row form-row--wide"><label>Чек / договор аренды</label><input name="receiptFile" class="input" type="file"></div>
           <div class="form-row form-row--wide"><button class="btn btn--green">Добавить оборудование</button></div>
         </form>
-        <div class="list" style="margin-top:12px">${(project.equipment || []).map((item) => `<div class="list-item"><span>${item.name}: ${item.quantity} × ${formatMoney(item.pricePerUnit)} × ${item.rentalDays} дн.</span><strong>${formatMoney(item.totalPrice)}</strong></div>`).join("")}</div>
+        <div class="matrix-list" style="margin-top:12px">
+          <div class="matrix-row matrix-row--head"><span>Позиция</span><span>Кол-во</span><span>Ставка</span><span>Дней</span><span>Итог</span></div>
+          ${(project.equipment || []).map((item) => projectEquipmentRowHtml(item, project.id)).join("") || `<div class="empty">Пока нет добавленной техники.</div>`}
+        </div>
       </div>
       <div class="panel">
         <h3 class="section-title">Расходы проекта</h3>
         ${expenseFormHtml("project-expense-form", project.id)}
-        <div class="list" style="margin-top:12px">${(project.expenses || []).map((expense) => `<div class="list-item"><div><strong>${expense.title}</strong><p class="list-item__text">${expense.category} · ${expense.comment}</p></div><strong>${formatMoney(expense.amount)}</strong></div>`).join("")}</div>
+        <div class="finance-stack" style="margin-top:12px">${(project.expenses || []).map((expense) => projectExpenseCardHtml(expense, project.id)).join("") || `<div class="empty">Пока нет проектных трат.</div>`}</div>
+      </div>
+      <div class="panel">
+        <h3 class="section-title">Оплаты и поступления</h3>
+        <form id="project-payment-form" class="form-grid" style="margin-top:12px">
+          ${input("amount", "Сумма оплаты", "number", true)}
+          ${input("date", "Дата получения", "date", true, localISODate())}
+          <div class="form-row"><label>Вид оплаты</label><select name="method" class="select">${paymentMethods.map((method) => `<option>${method}</option>`).join("")}</select></div>
+          ${input("comment", "Комментарий", "text", false, "")}
+          <div class="form-row form-row--wide"><button class="btn btn--green">Добавить оплату</button></div>
+        </form>
+        <div class="finance-stack" style="margin-top:12px">${projectPaymentRows(project).map((payment) => projectPaymentCardHtml(payment, project.id)).join("") || `<div class="empty">Поступлений ещё нет.</div>`}</div>
       </div>
       <div class="panel form-row--wide">
         <h3 class="section-title">Чат проекта</h3>
@@ -617,34 +1055,158 @@ function bindProjectDetailForms(projectId) {
     const id = new FormData(event.currentTarget).get("performerId");
     if (!project.performers.includes(id)) project.performers.push(id);
     saveState();
-    openProjectDetails(projectId);
+    refreshProjectDetails(projectId);
   });
   const equipmentForm = byId("equipment-form");
-  if (equipmentForm) equipmentForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    project.equipment.push({ id: uid("eq"), name: data.name, quantity: Number(data.quantity), pricePerUnit: Number(data.pricePerUnit), rentalDays: Number(data.rentalDays) });
-    saveState();
-    openProjectDetails(projectId);
-  });
-  bindExpenseForm("project-expense-form", projectId, () => openProjectDetails(projectId));
+  if (equipmentForm) {
+    setupEquipmentForm(equipmentForm);
+    equipmentForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const file = equipmentForm.querySelector("[name='receiptFile']")?.files[0];
+      project.equipment.push(normalizeEquipmentItem({
+        id: uid("eq"),
+        name: data.name,
+        category: data.category,
+        quantity: Number(data.quantity),
+        pricePerUnit: Number(data.pricePerUnit),
+        rentalDays: Number(data.rentalDays),
+        receiptFile: file?.name || ""
+      }));
+      if (file?.name) {
+        state.documents.push(normalizeDocument({
+          id: uid("doc"),
+          projectId,
+          type: "Чек",
+          title: data.name,
+          amount: Number(data.quantity) * Number(data.pricePerUnit) * Number(data.rentalDays),
+          date: project.shootingDates?.[0]?.start || localISODate(),
+          pdfFile: "",
+          receiptFile: file.name,
+          myTaxLink: "",
+          comment: "Аренда техники"
+        }));
+      }
+      rememberEquipmentPreset(data.name, data.category, data.pricePerUnit);
+      saveState();
+      refreshProjectDetails(projectId);
+    });
+  }
+  bindExpenseForm("project-expense-form", projectId, () => refreshProjectDetails(projectId));
   const fileForm = byId("project-file-form");
   if (fileForm) fileForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
     const file = form.querySelector("[name='title']").files[0];
-    project.files.push({ id: uid("fl"), category: data.get("category"), title: file?.name || "Документ без имени", url: "#", date: new Date().toISOString().slice(0, 10) });
+    project.files.push(normalizeProjectFile({ id: uid("fl"), category: data.get("category"), title: file?.name || "Документ без имени", url: "", date: new Date().toISOString().slice(0, 10), note: data.get("note") || "" }));
+    if (["Чек", "Счёт", "Акт", "PDF"].includes(data.get("category"))) {
+      state.documents.push(normalizeDocument({ id: uid("doc"), projectId, type: data.get("category"), title: file?.name || "Документ без имени", amount: 0, date: localISODate(), pdfFile: file?.name || "", receiptFile: data.get("category") === "Чек" ? file?.name || "" : "", myTaxLink: "", comment: data.get("note") || "" }));
+    }
     saveState();
-    openProjectDetails(projectId);
+    refreshProjectDetails(projectId);
+  });
+  const paymentForm = byId("project-payment-form");
+  if (paymentForm) paymentForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(paymentForm));
+    project.payments.push({ id: uid("pay"), amount: Number(data.amount), date: data.date, method: data.method, comment: data.comment || "" });
+    saveState();
+    refreshProjectDetails(projectId);
   });
   renderChat(byId("project-chat"), project.chat || [], (text) => {
     project.chat.push({ author: "Николай", role: "Режиссёр", time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }), text });
     saveState();
-    openProjectDetails(projectId);
+    refreshProjectDetails(projectId);
   });
 }
-function openProjectForm(id = null) {
+function openProjectPaymentEdit(projectId, paymentId, sourceScrollTop = 0) {
+  const project = projectById(projectId);
+  const payment = project?.payments?.find((item) => item.id === paymentId);
+  if (!project || !payment) return;
+  openModal("Изменить оплату", `
+    <form id="payment-edit-form" class="form-grid">
+      ${input("amount", "Сумма оплаты", "number", true, payment.amount)}
+      ${input("date", "Дата получения", "date", true, payment.date)}
+      <div class="form-row"><label>Вид оплаты</label><select name="method" class="select">${paymentMethods.map((method) => `<option ${method === payment.method ? "selected" : ""}>${method}</option>`).join("")}</select></div>
+      ${input("comment", "Комментарий", "text", false, payment.comment || "")}
+      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить</button><button class="btn" type="button" data-close-modal>Закрыть</button></div>
+    </form>`, {
+    backAction: () => openProjectDetails(projectId, { scrollTop: sourceScrollTop })
+  });
+  byId("payment-edit-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(event.currentTarget));
+    Object.assign(payment, { amount: Number(data.amount), date: data.date, method: data.method, comment: data.comment || "" });
+    saveState();
+    openProjectDetails(projectId, { scrollTop: sourceScrollTop });
+  });
+}
+function openProjectExpenseEdit(projectId, expenseId, sourceScrollTop = 0) {
+  const project = projectById(projectId);
+  const expense = project?.expenses?.find((item) => item.id === expenseId);
+  if (!project || !expense) return;
+  openModal("Изменить расход", `
+    <form id="expense-edit-form" class="form-grid">
+      <div class="form-row"><label>Категория</label><select name="category" class="select" data-expense-category>${expenseCategories.map((category) => `<option ${category === expense.category ? "selected" : ""}>${category}</option>`).join("")}</select></div>
+      <div class="form-row"><label>Типовая трата</label><select name="typical" class="select" data-expense-typical></select></div>
+      <div class="form-row hide" data-expense-custom-row><label>Своя трата / название</label><input name="customTitle" class="input" type="text" value="${escapeHtml(expense.title)}"></div>
+      ${input("amount", "Сумма", "number", true, expense.amount)}
+      ${input("date", "Дата", "date", true, expense.date)}
+      ${input("paidAt", "Дата выплаты", "date", true, expense.paidAt)}
+      <div class="form-row"><label>Способ оплаты</label><select name="paymentMethod" class="select">${paymentMethods.map((method) => `<option ${method === expense.paymentMethod ? "selected" : ""}>${method}</option>`).join("")}</select></div>
+      <div class="form-row"><label>Чек / документ</label><input name="receiptFile" class="input" type="file"><p class="small">${expense.receiptFile ? `Сейчас: ${escapeHtml(expense.receiptFile)}` : "Без чека"}</p></div>
+      <div class="form-row form-row--wide"><label>Комментарий</label><textarea name="comment" class="textarea">${escapeHtml(expense.comment || "")}</textarea></div>
+      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить</button><button class="btn" type="button" data-close-modal>Отменить</button></div>
+    </form>`, { wide: true, backAction: () => openProjectDetails(projectId, { scrollTop: sourceScrollTop }) });
+  const form = byId("expense-edit-form");
+  setupExpenseForm(form);
+  const typical = form.querySelector("[data-expense-typical]");
+  const templates = getExpenseTemplates(expense.category);
+  typical.value = templates.includes(expense.title) ? expense.title : "__custom__";
+  typical.dispatchEvent(new Event("change"));
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    const file = form.querySelector("[name='receiptFile']")?.files[0];
+    const title = data.typical === "__custom__" ? data.customTitle?.trim() : data.typical;
+    Object.assign(expense, normalizeExpense({ ...expense, category: data.category, title, amount: Number(data.amount), date: data.date, paidAt: data.paidAt, paymentMethod: data.paymentMethod, comment: data.comment || "", receiptFile: file?.name || expense.receiptFile || "" }));
+    rememberExpenseTemplate(data.category, title);
+    saveState();
+    openProjectDetails(projectId, { scrollTop: sourceScrollTop });
+  });
+}
+function openProjectEquipmentEdit(projectId, itemId, sourceScrollTop = 0) {
+  const project = projectById(projectId);
+  const item = project?.equipment?.find((entry) => entry.id === itemId);
+  if (!project || !item) return;
+  openModal("Изменить аренду техники", `
+    <form id="equipment-edit-form" class="form-grid">
+      <div class="form-row"><label>Категория техники</label><select name="category" class="select">${equipmentCategories.map((category) => `<option ${category === item.category ? "selected" : ""}>${category}</option>`).join("")}</select></div>
+      <div class="form-row">
+        <label>Позиция</label>
+        <input name="name" list="equipment-edit-preset-list" class="input" type="text" value="${escapeHtml(item.name)}" required>
+        <datalist id="equipment-edit-preset-list">${equipmentPresets().map((preset) => `<option value="${escapeHtml(preset.name)}">${escapeHtml(preset.category)} · ${formatMoney(preset.pricePerUnit)}</option>`).join("")}</datalist>
+      </div>
+      ${input("quantity", "Количество", "number", true, item.quantity)}
+      ${input("pricePerUnit", "Цена за единицу", "number", true, item.pricePerUnit)}
+      ${input("rentalDays", "Дней аренды", "number", true, item.rentalDays)}
+      <div class="form-row form-row--wide"><label>Чек / договор аренды</label><input name="receiptFile" class="input" type="file"><p class="small">${item.receiptFile ? `Сейчас: ${escapeHtml(item.receiptFile)}` : "Без документа"}</p></div>
+      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить</button><button class="btn" type="button" data-close-modal>Отменить</button></div>
+    </form>`, { wide: true, backAction: () => openProjectDetails(projectId, { scrollTop: sourceScrollTop }) });
+  const form = byId("equipment-edit-form");
+  setupEquipmentForm(form);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    const file = form.querySelector("[name='receiptFile']")?.files[0];
+    Object.assign(item, normalizeEquipmentItem({ ...item, name: data.name, category: data.category, quantity: Number(data.quantity), pricePerUnit: Number(data.pricePerUnit), rentalDays: Number(data.rentalDays), receiptFile: file?.name || item.receiptFile || "" }));
+    rememberEquipmentPreset(data.name, data.category, data.pricePerUnit);
+    saveState();
+    openProjectDetails(projectId, { scrollTop: sourceScrollTop });
+  });
+}
+function openProjectForm(id = null, sourceScrollTop = null) {
   const project = id ? projectById(id) : null;
   const selected = new Set(project?.performers || []);
   const coordinates = project?.coordinates || [55.7558, 37.6176];
@@ -676,9 +1238,16 @@ function openProjectForm(id = null) {
       </div>
       <div class="form-row form-row--wide"><label>Исполнители из базы</label><select name="performers" class="select" multiple size="5">${state.performers.map((p) => `<option value="${p.id}" ${selected.has(p.id) ? "selected" : ""}>${p.name} · ${p.role} · ${formatMoney(p.rate)} · ${p.status}</option>`).join("")}</select><p class="small">Используется множественный выбор. Для backend это массив performerId.</p></div>
       <div class="form-row form-row--wide"><label>Описание</label><textarea name="description" class="textarea" required>${project?.description || ""}</textarea></div>
-      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить</button><button class="btn" type="button" data-close-modal>Отменить</button></div>
-    </form>`, { wide: true });
+      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить</button><button class="btn" type="button" data-close-modal>${project ? "Закрыть" : "Отменить"}</button></div>
+    </form>`, project ? {
+    wide: true,
+    backAction: () => openProjectDetails(project.id, { scrollTop: sourceScrollTop ?? 0 })
+  } : { wide: true });
   bindProjectLocationPicker(coordinates, project?.location || "");
+  const projectForm = byId("project-form");
+  setupDatePairSync(projectForm, "startDate", "draftDeadline", { offsetDays: 7 });
+  setupDatePairSync(projectForm, "draftDeadline", "finalDeadline", { offsetDays: 7 });
+  setupDatePairSync(projectForm, "shootingStart", "shootingEnd");
   byId("project-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -698,6 +1267,7 @@ function openProjectForm(id = null) {
       coordinates: [Number(data.lat), Number(data.lng)],
       performers,
       clientPayment: Number(data.clientPayment),
+      payments: project?.payments || [],
       expenses: project?.expenses || [],
       equipment: project?.equipment || [],
       files: project?.files || [],
@@ -706,6 +1276,11 @@ function openProjectForm(id = null) {
     if (project) state.projects[state.projects.findIndex((item) => item.id === project.id)] = next;
     else state.projects.push(next);
     saveState();
+    if (project) {
+      openProjectDetails(project.id, { scrollTop: sourceScrollTop ?? 0 });
+      rerenderCurrentPage();
+      return;
+    }
     closeModal();
     rerenderCurrentPage();
   });
@@ -818,31 +1393,179 @@ function renderFinancesPage() {
     document.querySelectorAll("[data-finance-tab]").forEach((el) => el.classList.toggle("active", el === btn));
     renderFinanceTab();
   }));
+  document.querySelectorAll("[data-finance-period]").forEach((btn) => btn.addEventListener("click", () => {
+    financeChartPeriod = btn.dataset.financePeriod;
+    document.querySelectorAll("[data-finance-period]").forEach((el) => el.classList.toggle("active", el === btn));
+    renderFinanceCharts();
+  }));
+  document.querySelectorAll("[data-finance-period]").forEach((el) => el.classList.toggle("active", el.dataset.financePeriod === financeChartPeriod));
   renderFinanceCharts();
   renderFinanceTab();
+}
+function filteredFinanceExpenses() {
+  return financeCategoryFilter ? allExpenses().filter((expense) => expense.category === financeCategoryFilter) : allExpenses();
+}
+function filteredFinanceProjects() {
+  if (!financeCategoryFilter) return state.projects;
+  return state.projects.filter((project) => projectExpenseRows(project).some((expense) => expense.category === financeCategoryFilter));
+}
+function financeFilterBanner() {
+  if (!financeCategoryFilter) return "";
+  return `<div class="section-head" style="margin-bottom:12px"><div><h3 class="section-title">Фильтр по категории</h3><p class="section-note">Показаны только проекты и расходы, где есть траты категории «${financeCategoryFilter}».</p></div><button class="btn btn--ghost" onclick="clearFinanceCategoryFilter()">Сбросить фильтр</button></div>`;
 }
 function renderFinanceTab() {
   const root = byId("finance-tab-content");
   if (financeTab === "projects") {
-    root.innerHTML = table(["Проект", "Клиент", "Доход", "Расходы", "Прибыль", "Маржа"], state.projects.map((p) => [p.title, p.client, formatMoney(p.clientPayment), formatMoney(projectExpenses(p)), formatMoney(p.profit), `${Math.round(p.profit / p.clientPayment * 100)}%`]));
+    const projects = filteredFinanceProjects();
+    root.innerHTML = financeFilterBanner() + table(["Проект", "Клиент", "Бюджет", "Получено", "Расходы", "Прибыль", "Маржа"], projects.map((p) => [p.title, p.client, formatMoney(p.clientPayment), formatMoney(projectIncome(p)), formatMoney(projectExpenses(p)), formatMoney(p.profit), `${projectMargin(p)}%`]));
   }
   if (financeTab === "expenses") {
-    root.innerHTML = `<div class="section-head"><h2 class="section-title">Расходы</h2><button class="btn btn--green" data-action="open-expense-create">Добавить трату</button></div>` + table(["Тип", "Проект", "Категория", "Название", "Сумма", "Дата", "Чек"], allExpenses().map((e) => [e.type === "general" ? "Общая" : "Проект", projectById(e.projectId)?.title || "Без проекта", e.category, e.title, formatMoney(e.amount), formatDate(e.date), e.receiptFile || "Нет"]));
+    const expenses = filteredFinanceExpenses();
+    root.innerHTML = `<div class="section-head"><h2 class="section-title">Расходы</h2><button class="btn btn--green" data-action="open-expense-create">Добавить трату</button></div>${financeFilterBanner()}` + table(["Тип", "Проект", "Категория", "Название", "Сумма", "Дата", "Выплата", "Способ", "Чек"], expenses.map((e) => [e.type === "general" ? "Общая" : e.type === "equipment" ? "Техника" : "Проект", projectById(e.projectId)?.title || "Без проекта", e.category, e.title, formatMoney(e.amount), formatDate(e.date), formatDate(e.paidAt), e.paymentMethod, e.receiptFile || "Нет"]));
   }
   if (financeTab === "documents") {
-    root.innerHTML = table(["Тип", "Проект", "Название", "Сумма", "Дата", "PDF/чек", "Мой налог"], state.documents.map((d) => [d.type, projectById(d.projectId)?.title || "Без проекта", d.title, formatMoney(d.amount), formatDate(d.date), d.pdfFile || d.receiptFile || "Нет", d.myTaxLink ? `<a href="${d.myTaxLink}" target="_blank">Открыть</a>` : "Нет"]));
+    root.innerHTML = financeFilterBanner() + table(["Тип", "Проект", "Название", "Сумма", "Дата", "PDF/чек", "Мой налог"], state.documents.map((d) => [d.type, projectById(d.projectId)?.title || "Без проекта", d.title, formatMoney(d.amount), formatDate(d.date), d.pdfFile || d.receiptFile || "Нет", d.myTaxLink ? `<a href="${d.myTaxLink}" target="_blank">Открыть</a>` : "Нет"]));
   }
 }
 function renderFinanceCharts() {
   if (!window.Chart) return;
   Object.values(financeCharts).forEach((chart) => chart.destroy());
   financeCharts = {};
-  const months = ["Май", "Июнь"];
-  const income = [totals().income, Math.round(totals().income * .72)];
-  const expenses = [totals().expenses, Math.round(totals().expenses * .58)];
-  financeCharts.line = new Chart(byId("finance-line"), { type: "line", data: { labels: months, datasets: [{ label: "Доходы", data: income, borderColor: "#191a23", backgroundColor: "rgba(185,255,102,.35)" }, { label: "Расходы", data: expenses, borderColor: "#ef5350", backgroundColor: "rgba(239,83,80,.16)" }] }, options: { responsive: true, maintainAspectRatio: false } });
+  const monthlySeries = financeMonthlySeries(financeChartPeriod);
+  financeCharts.line = new Chart(byId("finance-line"), {
+    type: "line",
+    data: {
+      labels: monthlySeries.labels,
+      datasets: [
+        { label: "Доходы", data: monthlySeries.income, borderColor: "#191a23", backgroundColor: "rgba(185,255,102,.28)", tension: .32, fill: true },
+        { label: "Расходы", data: monthlySeries.expenses, borderColor: "#ef5350", backgroundColor: "rgba(239,83,80,.14)", tension: .32, fill: true }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { position: "top", labels: { boxWidth: 12, usePointStyle: true } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => formatMoney(value)
+          }
+        }
+      }
+    }
+  });
   const byCategory = groupByAmount(allExpenses(), "category");
-  financeCharts.pie = new Chart(byId("finance-pie"), { type: "doughnut", data: { labels: Object.keys(byCategory), datasets: [{ data: Object.values(byCategory), backgroundColor: ["#b9ff66", "#191a23", "#3975d6", "#ef5350", "#f2b84b", "#26a69a", "#d8ffad"] }] }, options: { responsive: true, maintainAspectRatio: false } });
+  const pieLabels = Object.keys(byCategory);
+  financeCharts.pie = new Chart(byId("finance-pie"), {
+    type: "doughnut",
+    data: {
+      labels: pieLabels,
+      datasets: [{
+        data: Object.values(byCategory),
+        backgroundColor: ["#b9ff66", "#191a23", "#3975d6", "#ef5350", "#f2b84b", "#26a69a", "#d8ffad"],
+        offset: pieLabels.map((label) => label === financeCategoryFilter ? 16 : 0)
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (_, elements) => {
+        const index = elements?.[0]?.index;
+        if (index === undefined) return;
+        const nextCategory = pieLabels[index];
+        financeCategoryFilter = financeCategoryFilter === nextCategory ? "" : nextCategory;
+        renderFinanceCharts();
+        renderFinanceTab();
+      },
+      plugins: {
+        legend: {
+          position: "bottom"
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${formatMoney(ctx.parsed)}`
+          }
+        }
+      }
+    }
+  });
+}
+function financeMonthlySeries(period) {
+  const incomeRecords = state.projects.flatMap((project) => (project.payments || []).map((payment) => ({ date: payment.date, amount: Number(payment.amount || 0) })));
+  const expenseRecords = allExpenses().map((expense) => ({ date: expense.paidAt || expense.date, amount: Number(expense.amount || 0) }));
+  const allDates = [...incomeRecords.map((item) => item.date), ...expenseRecords.map((item) => item.date)].filter(Boolean).sort();
+  const endDate = allDates.length ? new Date(`${allDates[allDates.length - 1]}T12:00:00`) : new Date();
+  let monthsCount = null;
+  if (period === "2m") monthsCount = 2;
+  if (period === "6m") monthsCount = 6;
+  if (period === "1y") monthsCount = 12;
+  let startDate;
+  if (monthsCount) {
+    startDate = new Date(endDate.getFullYear(), endDate.getMonth() - (monthsCount - 1), 1);
+  } else {
+    const firstDate = allDates.length ? new Date(`${allDates[0]}T12:00:00`) : new Date();
+    startDate = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  }
+  if (period === "all") {
+    const years = [];
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    for (let year = startYear; year <= endYear; year++) years.push(year);
+    const incomeMap = new Map();
+    const expenseMap = new Map();
+    incomeRecords.forEach((item) => {
+      const year = new Date(`${item.date}T12:00:00`).getFullYear();
+      incomeMap.set(year, (incomeMap.get(year) || 0) + item.amount);
+    });
+    expenseRecords.forEach((item) => {
+      const year = new Date(`${item.date}T12:00:00`).getFullYear();
+      expenseMap.set(year, (expenseMap.get(year) || 0) + item.amount);
+    });
+    return {
+      labels: years.map((year) => String(year)),
+      income: years.map((year) => incomeMap.get(year) || 0),
+      expenses: years.map((year) => expenseMap.get(year) || 0)
+    };
+  }
+  const months = [];
+  const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  while (cursor <= endDate) {
+    months.push(new Date(cursor));
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  const labels = months.map((date) => new Intl.DateTimeFormat("ru-RU", { month: "short", year: "2-digit" }).format(date));
+  const monthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  const incomeMap = new Map();
+  const expenseMap = new Map();
+  incomeRecords.forEach((item) => {
+    const date = new Date(`${item.date}T12:00:00`);
+    const key = monthKey(date);
+    incomeMap.set(key, (incomeMap.get(key) || 0) + item.amount);
+  });
+  expenseRecords.forEach((item) => {
+    const date = new Date(`${item.date}T12:00:00`);
+    const key = monthKey(date);
+    expenseMap.set(key, (expenseMap.get(key) || 0) + item.amount);
+  });
+  return {
+    labels,
+    income: months.map((date) => incomeMap.get(monthKey(date)) || 0),
+    expenses: months.map((date) => expenseMap.get(monthKey(date)) || 0)
+  };
+}
+function clearFinanceCategoryFilter() {
+  financeCategoryFilter = "";
+  renderFinanceCharts();
+  renderFinanceTab();
 }
 function openExpenseForm(projectId = "") {
   openModal("Добавить трату", expenseFormHtml("expense-form", projectId, true), { note: "Расход можно связать с проектом или оставить общей тратой.", wide: true });
@@ -852,11 +1575,13 @@ function expenseFormHtml(formId, projectId = "", withProjectSelect = false) {
   return `
     <form id="${formId}" class="form-grid" style="margin-top:12px">
       ${withProjectSelect ? `<div class="form-row"><label>Проект</label><select name="projectId" class="select"><option value="">Общая трата</option>${state.projects.map((p) => `<option value="${p.id}" ${p.id === projectId ? "selected" : ""}>${p.title}</option>`).join("")}</select></div>` : `<input type="hidden" name="projectId" value="${projectId}">`}
-      <div class="form-row"><label>Категория</label><select name="category" class="select">${expenseCategories.map((c) => `<option>${c}</option>`).join("")}</select></div>
-      <div class="form-row"><label>Типовая трата</label><select name="typical" class="select">${typicalExpenses.map((c) => `<option>${c}</option>`).join("")}</select></div>
-      ${input("title", "Своя трата / название", "text", true)}
+      <div class="form-row"><label>Категория</label><select name="category" class="select" data-expense-category>${expenseCategories.map((c) => `<option>${c}</option>`).join("")}</select></div>
+      <div class="form-row"><label>Типовая трата</label><select name="typical" class="select" data-expense-typical></select></div>
+      <div class="form-row hide" data-expense-custom-row><label>Своя трата / название</label><input name="customTitle" class="input" type="text"></div>
       ${input("amount", "Сумма", "number", true)}
       ${input("date", "Дата", "date", true, localISODate())}
+      ${input("paidAt", "Дата выплаты", "date", true, localISODate())}
+      <div class="form-row"><label>Способ оплаты</label><select name="paymentMethod" class="select">${paymentMethods.map((method) => `<option>${method}</option>`).join("")}</select></div>
       <div class="form-row"><label>Чек / документ</label><input name="receiptFile" class="input" type="file"></div>
       <div class="form-row form-row--wide"><label>Комментарий</label><textarea name="comment" class="textarea"></textarea></div>
       <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить трату</button></div>
@@ -865,17 +1590,55 @@ function expenseFormHtml(formId, projectId = "", withProjectSelect = false) {
 function bindExpenseForm(formId, fixedProjectId, afterSave) {
   const form = byId(formId);
   if (!form) return;
+  setupExpenseForm(form);
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form));
     const file = form.querySelector("[name='receiptFile']")?.files[0];
-    const expense = { id: uid("ex"), projectId: data.projectId || null, category: data.category, title: data.title || data.typical, amount: Number(data.amount), date: data.date, comment: data.comment, receiptFile: file?.name || "", type: data.projectId ? "project" : "general" };
+    const title = data.typical === "__custom__" ? data.customTitle?.trim() : data.typical;
+    const expense = normalizeExpense({ id: uid("ex"), projectId: data.projectId || null, category: data.category, title, amount: Number(data.amount), date: data.date, paidAt: data.paidAt, paymentMethod: data.paymentMethod, comment: data.comment, receiptFile: file?.name || "", type: data.projectId ? "project" : "general" });
+    rememberExpenseTemplate(data.category, title);
     if (expense.projectId) projectById(expense.projectId).expenses.push(expense);
     else state.generalExpenses.push(expense);
-    if (expense.receiptFile) state.documents.push({ id: uid("doc"), projectId: expense.projectId, type: "Чек", title: expense.title, amount: expense.amount, date: expense.date, pdfFile: "", receiptFile: expense.receiptFile, myTaxLink: "", comment: expense.comment });
+    if (expense.receiptFile) state.documents.push(normalizeDocument({ id: uid("doc"), projectId: expense.projectId, type: "Чек", title: expense.title, amount: expense.amount, date: expense.date, pdfFile: "", receiptFile: expense.receiptFile, myTaxLink: "", comment: expense.comment }));
     saveState();
     afterSave();
   });
+}
+function setupExpenseForm(form) {
+  const categorySelect = form.querySelector("[data-expense-category]");
+  const typicalSelect = form.querySelector("[data-expense-typical]");
+  const customRow = form.querySelector("[data-expense-custom-row]");
+  const customInput = form.querySelector("[name='customTitle']");
+  if (!categorySelect || !typicalSelect) return;
+  setupDatePairSync(form, "date", "paidAt");
+  const renderTemplates = () => {
+    const category = categorySelect.value;
+    typicalSelect.innerHTML = `${getExpenseTemplates(category).map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("")}<option value="__custom__">Своя трата...</option>`;
+    toggleCustom();
+  };
+  const toggleCustom = () => {
+    const isCustom = typicalSelect.value === "__custom__";
+    customRow?.classList.toggle("hide", !isCustom);
+    if (customInput) customInput.required = isCustom;
+  };
+  categorySelect.addEventListener("change", renderTemplates);
+  typicalSelect.addEventListener("change", toggleCustom);
+  renderTemplates();
+}
+function setupEquipmentForm(form) {
+  const nameInput = form.querySelector("[name='name']");
+  const priceInput = form.querySelector("[name='pricePerUnit']");
+  const categorySelect = form.querySelector("[name='category']");
+  if (!nameInput || !priceInput || !categorySelect) return;
+  const syncPreset = () => {
+    const preset = equipmentPresetByName(nameInput.value);
+    if (!preset) return;
+    if (!Number(priceInput.value)) priceInput.value = preset.pricePerUnit;
+    categorySelect.value = preset.category || categorySelect.value;
+  };
+  nameInput.addEventListener("change", syncPreset);
+  nameInput.addEventListener("blur", syncPreset);
 }
 
 function renderCalendarPage() {
@@ -902,12 +1665,49 @@ function setCalendarView(view) {
   renderCalendar();
 }
 function calendarEventsWithDeadlines() {
-  const projectEvents = state.projects.flatMap((project) => [
-    { id: `draft-${project.id}`, title: `Черновик: ${project.title}`, description: "Автоматически из проекта", startDateTime: `${project.draftDeadline}T17:00`, endDateTime: `${project.draftDeadline}T18:00`, projectId: project.id, performerId: "", status: project.status, priority: "Высокий", type: "deadline" },
-    { id: `final-${project.id}`, title: `Чистовик: ${project.title}`, description: "Автоматически из проекта", startDateTime: `${project.finalDeadline}T17:00`, endDateTime: `${project.finalDeadline}T18:00`, projectId: project.id, performerId: "", status: project.status, priority: "Высокий", type: "deadline" },
-    ...(project.shootingDates || []).map((date) => ({ id: `shoot-${project.id}-${date.start}`, title: `Съёмка: ${project.title}`, description: project.location, startDateTime: `${date.start}T10:00`, endDateTime: `${date.end}T18:00`, projectId: project.id, performerId: project.performers[0] || "", status: project.status, priority: "Высокий", type: "shoot" }))
-  ]);
+  const projectEvents = state.projects.flatMap((project) => {
+    const draftId = `draft-${project.id}`;
+    const finalId = `final-${project.id}`;
+    const withOverride = (event) => applyProjectEventOverride(project, event);
+    return [
+      { id: draftId, title: `Черновик: ${project.title}`, description: "Автоматически из проекта", startDateTime: `${project.draftDeadline}T17:00`, endDateTime: `${project.draftDeadline}T18:00`, projectId: project.id, performerId: project.calendarAssignments?.[draftId] || "", status: project.status, priority: "Высокий", type: "deadline" },
+      { id: finalId, title: `Чистовик: ${project.title}`, description: "Автоматически из проекта", startDateTime: `${project.finalDeadline}T17:00`, endDateTime: `${project.finalDeadline}T18:00`, projectId: project.id, performerId: project.calendarAssignments?.[finalId] || "", status: project.status, priority: "Высокий", type: "deadline" },
+      ...(project.shootingDates || []).map((date) => {
+        const shootId = `shoot-${project.id}-${date.start}`;
+        return { id: shootId, title: `Съёмка: ${project.title}`, description: project.location, startDateTime: `${date.start}T10:00`, endDateTime: `${date.end}T18:00`, projectId: project.id, performerId: project.calendarAssignments?.[shootId] || project.performers[0] || "", status: project.status, priority: "Высокий", type: "shoot" };
+      })
+    ].map(withOverride);
+  });
   return [...state.events, ...projectEvents];
+}
+function isAutoProjectEvent(id = "") {
+  return /^(draft-|final-|shoot-)/.test(String(id));
+}
+function applyProjectEventOverride(project, event) {
+  const override = project.calendarEventOverrides?.[event.id] || {};
+  return { ...event, ...override, id: event.id, projectId: project.id };
+}
+function findCalendarEvent(id) {
+  const directIndex = state.events.findIndex((event) => event.id === id);
+  if (directIndex >= 0) return { event: state.events[directIndex], source: "manual", index: directIndex, project: projectById(state.events[directIndex].projectId) };
+  const event = calendarEventsWithDeadlines().find((item) => item.id === id);
+  return event ? { event, source: "auto", project: projectById(event.projectId) } : null;
+}
+function saveCalendarEventUpdate(id, patch) {
+  const found = findCalendarEvent(id);
+  if (!found) return;
+  if (found.source === "manual") {
+    state.events[found.index] = { ...state.events[found.index], ...patch, id };
+  } else if (found.project) {
+    found.project.calendarEventOverrides = found.project.calendarEventOverrides || {};
+    found.project.calendarEventOverrides[id] = { ...(found.project.calendarEventOverrides[id] || {}), ...patch };
+    if (patch.performerId !== undefined) {
+      found.project.calendarAssignments = found.project.calendarAssignments || {};
+      if (patch.performerId) found.project.calendarAssignments[id] = patch.performerId;
+      else delete found.project.calendarAssignments[id];
+    }
+  }
+  saveState();
 }
 function renderCalendar() {
   const title = byId("calendar-title");
@@ -921,7 +1721,7 @@ function renderCalendar() {
     root.innerHTML = renderDaySchedule(calendarDate, events);
   } else {
     const days = weekDates(calendarDate);
-    title.textContent = `Неделя ${formatDate(days[0])} - ${formatDate(days[6])}`;
+    title.textContent = `${formatDate(days[0])} - ${formatDate(days[6])}`;
     root.innerHTML = `<div class="timeline">${days.map((day) => dayTimeline(day, events)).join("")}</div>`;
   }
 }
@@ -937,14 +1737,18 @@ function renderMonth(events) {
     date.setDate(start.getDate() + i);
     const iso = localISODate(date);
     const dayEvents = events.filter((event) => event.startDateTime.slice(0, 10) === iso);
-    cells.push(`<div class="calendar-cell ${date.getMonth() !== month ? "is-muted" : ""} ${iso === localISODate() ? "is-today" : ""}" data-date="${iso}" onclick="openEventForm('${iso}')"><div class="calendar-date">${date.getDate()}</div>${dayEvents.map(eventChip).join("")}</div>`);
+    cells.push(`<div class="calendar-cell ${date.getMonth() !== month ? "is-muted" : ""} ${iso === localISODate() ? "is-today" : ""}" data-date="${iso}" onclick="openCalendarDay('${iso}')"><div class="calendar-date">${date.getDate()}</div>${dayEvents.map(eventChip).join("")}</div>`);
   }
   return `<div class="calendar-board">${["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((d) => `<div class="calendar-day-name">${d}</div>`).join("")}${cells.join("")}</div>`;
+}
+function openCalendarDay(date) {
+  calendarDate = new Date(`${date}T12:00:00`);
+  setCalendarView("day");
 }
 function dayTimeline(day, events) {
   const iso = localISODate(day);
   const dayEvents = events.filter((event) => event.startDateTime.slice(0, 10) === iso).sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
-  return `<div class="panel"><div class="section-head"><h3 class="section-title">${formatDate(iso)}</h3><button class="btn btn--green" onclick="openEventForm('${iso}')">Добавить</button></div>${dayEvents.map(eventListItem).join("") || `<div class="empty">Событий нет. Нажмите «Добавить».</div>`}</div>`;
+  return `<div class="panel"><div class="section-head"><h3 class="section-title">${formatDate(iso)}</h3></div>${dayEvents.map(eventListItem).join("") || `<div class="empty">Событий нет. Нажмите «Добавить событие» сверху.</div>`}</div>`;
 }
 function renderDaySchedule(day, events) {
   const iso = localISODate(day);
@@ -952,6 +1756,8 @@ function renderDaySchedule(day, events) {
   const endHour = 23;
   const hourHeight = 64;
   const dayEvents = events.filter((event) => event.startDateTime.slice(0, 10) === iso).sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+  const reminderEvents = dayEvents.filter((event) => event.allDay);
+  const timedEvents = dayEvents.filter((event) => !event.allDay);
   const hours = Array.from({ length: endHour - startHour }, (_, index) => startHour + index);
   const now = new Date();
   const isToday = iso === localISODate(now);
@@ -966,15 +1772,43 @@ function renderDaySchedule(day, events) {
         <h3 class="section-title">Мой день по часам</h3>
         <p class="section-note">Созвоны, задачи и дедлайны разложены по времени. Красная линия показывает текущее время.</p>
       </div>
-      <button class="btn btn--green" onclick="openEventForm('${iso}')">Добавить событие</button>
     </div>
+    ${reminderEvents.length ? `<div class="day-reminders">${reminderEvents.map(dayReminderCard).join("")}</div>` : ""}
     <div class="day-schedule">
       <div class="day-hours">${hours.map((hour) => `<div class="day-hour-label">${String(hour).padStart(2, "0")}:00</div>`).join("")}</div>
-      <div class="day-grid" onclick="openEventForm('${iso}')">
+      <div class="day-grid" onclick="openEventFromDayGrid(event, '${iso}')">
         ${nowLine}
-        ${dayEvents.map((event) => dayEventBlock(event, startHour, endHour, hourHeight)).join("")}
+        ${timedEvents.map((event) => dayEventBlock(event, startHour, endHour, hourHeight)).join("")}
       </div>
     </div>`;
+}
+function openEventFromDayGrid(clickEvent, iso) {
+  if (clickEvent.target.closest(".day-event")) return;
+  const grid = clickEvent.currentTarget;
+  const rect = grid.getBoundingClientRect();
+  const hourHeight = 64;
+  const startHour = 8;
+  const y = Math.max(0, clickEvent.clientY - rect.top);
+  const rawMinutes = startHour * 60 + (y / hourHeight) * 60;
+  const snapped = Math.round(rawMinutes / 15) * 15;
+  const startMinutes = Math.max(startHour * 60, Math.min(22 * 60, snapped));
+  const endMinutes = Math.min(23 * 60, startMinutes + 60);
+  const toTime = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  openEventForm(iso, { start: toTime(startMinutes), end: toTime(endMinutes) });
+}
+function dayReminderCard(event) {
+  const project = projectById(event.projectId);
+  const performer = performerById(event.performerId);
+  const doneClass = event.status === "Готово" ? "is-done" : "";
+  return `
+    <button class="day-reminder ${doneClass}" onclick="openEventDetails('${event.id}')">
+      <div class="day-reminder__main">
+        <div class="day-reminder__label">Напоминание на день</div>
+        <div class="day-reminder__title">${escapeHtml(event.title)}</div>
+        <div class="day-reminder__meta">${project?.title || "Без проекта"} · ${performer?.name || "Без исполнителя"} · ${event.priority}</div>
+      </div>
+      <span class="day-reminder__tag">${event.type === "deadline" ? "Дедлайн" : "Весь день"}</span>
+    </button>`;
 }
 function dayEventBlock(event, startHour, endHour, hourHeight) {
   const project = projectById(event.projectId);
@@ -984,21 +1818,26 @@ function dayEventBlock(event, startHour, endHour, hourHeight) {
   const startMinutes = Math.max(startHour * 60, start.getHours() * 60 + start.getMinutes());
   const endMinutes = Math.min(endHour * 60, end.getHours() * 60 + end.getMinutes());
   const top = ((startMinutes - startHour * 60) / 60) * hourHeight;
-  const height = Math.max(38, ((Math.max(endMinutes, startMinutes + 30) - startMinutes) / 60) * hourHeight - 6);
+  const durationMinutes = Math.max(endMinutes, startMinutes + 30) - startMinutes;
+  const height = Math.max(48, (durationMinutes / 60) * hourHeight - 6);
+  const densityClass = height < 58 ? "day-event--compact" : height < 96 ? "day-event--medium" : "day-event--roomy";
+  const doneClass = event.status === "Готово" ? "is-done" : "";
   return `
-    <article class="day-event day-event--${event.type}" style="top:${top}px;height:${height}px" onclick="event.stopPropagation(); openEventDetails('${event.id}')">
-      <div class="day-event__time">${start.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</div>
+    <article class="day-event day-event--${event.type} ${densityClass} ${doneClass}" style="top:${top}px;height:${height}px" onclick="event.stopPropagation(); openEventDetails('${event.id}')">
+      <div class="day-event__time">${eventTimeLabel(event)}</div>
       <div class="day-event__title">${event.title}</div>
       <div class="day-event__meta">${project?.title || "Без проекта"} · ${performer?.name || "Без исполнителя"} · ${event.priority}</div>
     </article>`;
 }
 function eventChip(event) {
-  return `<button class="event-chip event-chip--${event.type}" onclick="event.stopPropagation(); openEventDetails('${event.id}')">${event.title}</button>`;
+  const doneClass = event.status === "Готово" ? "is-done" : "";
+  return `<button class="event-chip event-chip--${event.type} ${doneClass}" onclick="event.stopPropagation(); openCalendarDay('${event.startDateTime.slice(0, 10)}')">${event.title}</button>`;
 }
 function eventListItem(event) {
   const project = projectById(event.projectId);
   const performer = performerById(event.performerId);
-  return `<div class="timeline-item clickable" onclick="openEventDetails('${event.id}')"><div class="timeline-time">${formatDateTime(event.startDateTime)}</div><div><strong>${event.title}</strong><p class="list-item__text">${project?.title || "Без проекта"} · ${performer?.name || "Без исполнителя"} · ${event.priority}</p></div></div>`;
+  const doneClass = event.status === "Готово" ? "is-done" : "";
+  return `<div class="timeline-item clickable ${doneClass}" onclick="openEventDetails('${event.id}')"><div class="timeline-time">${eventTimeLabel(event, { withDate: true })}</div><div><strong>${event.title}</strong><p class="list-item__text">${project?.title || "Без проекта"} · ${performer?.name || "Без исполнителя"} · ${event.status} · ${event.priority}</p></div></div>`;
 }
 function filteredCalendarEvents() {
   const projectId = byId("calendar-project")?.value;
@@ -1018,43 +1857,179 @@ function weekDates(date) {
   start.setDate(date.getDate() - ((date.getDay() + 6) % 7));
   return Array.from({ length: 7 }, (_, i) => { const d = new Date(start); d.setDate(start.getDate() + i); return d; });
 }
-function openEventDetails(id) {
-  const event = calendarEventsWithDeadlines().find((item) => item.id === id);
-  openModal(event.title, `<div class="list">
-    <div class="list-item"><span>Время</span><strong>${formatDateTime(event.startDateTime)} - ${formatDateTime(event.endDateTime)}</strong></div>
-    <div class="list-item"><span>Проект</span><strong>${projectById(event.projectId)?.title || "Без проекта"}</strong></div>
+function openEventDetails(id, sourceProjectId = "", sourceProjectScrollTop = 0) {
+  const found = findCalendarEvent(id);
+  const event = found?.event;
+  if (!event) return;
+  const project = projectById(event.projectId);
+  const actions = `<div class="inline-actions" style="margin-bottom:12px">
+    ${editIconButton(`openEventEditForm('${event.id}', '${sourceProjectId}', ${Number(sourceProjectScrollTop || 0)})`)}
+    <button class="btn ${event.status === "Готово" ? "" : "btn--green"}" onclick="markEventDone('${event.id}', '${sourceProjectId}', ${Number(sourceProjectScrollTop || 0)})">${event.status === "Готово" ? "Выполнено" : "Отметить выполненной"}</button>
+    ${project ? `<button class="btn btn--green" onclick="openCalendarPerformerAssign('${event.id}', '${sourceProjectId}', ${Number(sourceProjectScrollTop || 0)})">${event.performerId ? "Изменить исполнителя" : "Назначить исполнителя"}</button><button class="btn btn--ghost" onclick="openProjectDetails('${project.id}')">Открыть проект</button>` : ""}
+  </div>`;
+  openModal(event.title, `${actions}<div class="list">
+    <div class="list-item"><span>Время</span><strong>${eventTimeLabel(event, { withDate: true })}</strong></div>
+    <div class="list-item"><span>Проект</span><strong>${project?.title || "Без проекта"}</strong></div>
     <div class="list-item"><span>Исполнитель</span><strong>${performerById(event.performerId)?.name || "Не назначен"}</strong></div>
     <div class="list-item"><span>Статус / приоритет</span><strong>${event.status} / ${event.priority}</strong></div>
     <div class="list-item"><span>Описание</span><strong>${event.description || "Нет"}</strong></div>
-  </div>`);
+  </div>`, sourceProjectId ? {
+    backAction: () => openProjectDetails(sourceProjectId, { scrollTop: sourceProjectScrollTop })
+  } : {});
 }
-function openEventForm(date = localISODate()) {
-  openModal("Добавить событие", `
+function openEventEditForm(eventId, sourceProjectId = "", sourceProjectScrollTop = 0) {
+  const found = findCalendarEvent(eventId);
+  if (!found) return;
+  const event = found.event;
+  openEventForm(event.startDateTime.slice(0, 10), {
+    ...event,
+    editEventId: event.id,
+    start: event.startDateTime.slice(11, 16),
+    end: event.endDateTime.slice(11, 16),
+    sourceProjectId,
+    sourceProjectScrollTop
+  });
+}
+function markEventDone(eventId, sourceProjectId = "", sourceProjectScrollTop = 0) {
+  saveCalendarEventUpdate(eventId, { status: "Готово" });
+  rerenderCurrentPage();
+  openEventDetails(eventId, sourceProjectId, sourceProjectScrollTop);
+}
+function openCalendarPerformerAssign(eventId, sourceProjectId = "", sourceProjectScrollTop = 0) {
+  const event = findCalendarEvent(eventId)?.event;
+  const project = projectById(event?.projectId);
+  if (!event || !project) return;
+  openModal("Назначить исполнителя", `
+    <form id="event-performer-form" class="form-grid">
+      <div class="form-row form-row--wide">
+        <label>Исполнитель</label>
+        <select name="performerId" class="select">
+          <option value="">Не назначен</option>
+          ${state.performers.map((performer) => `<option value="${performer.id}" ${performer.id === event.performerId ? "selected" : ""}>${performer.name} · ${performer.role} · ${performer.status}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-row form-row--wide inline-actions">
+        <button class="btn btn--green">Сохранить</button>
+        <button class="btn" type="button" data-close-modal>${sourceProjectId ? "Закрыть" : "Отменить"}</button>
+      </div>
+    </form>`, {
+    note: `Назначение сохранится для события «${event.title}» и будет видно на главной, в календаре и в деталях задачи.`,
+    backAction: () => openEventDetails(event.id, sourceProjectId, sourceProjectScrollTop)
+  });
+  byId("event-performer-form").addEventListener("submit", (submitEvent) => {
+    submitEvent.preventDefault();
+    const performerId = new FormData(submitEvent.currentTarget).get("performerId");
+    saveCalendarEventUpdate(event.id, { performerId });
+    rerenderCurrentPage();
+    openEventDetails(event.id, sourceProjectId, sourceProjectScrollTop);
+  });
+}
+function openEventForm(date = localISODate(), preset = {}) {
+  const presetProjectId = preset.projectId || "";
+  const isEdit = Boolean(preset.editEventId);
+  openModal(isEdit ? "Редактировать задачу" : "Добавить событие", `
     <form id="event-form" class="form-grid">
-      ${input("title", "Название задачи", "text", true)}
-      <div class="form-row"><label>Проект</label><select name="projectId" class="select"><option value="">Без проекта</option>${state.projects.map((p) => `<option value="${p.id}">${p.title}</option>`).join("")}</select></div>
-      <div class="form-row"><label>Исполнитель</label><select name="performerId" class="select"><option value="">Не назначен</option>${state.performers.map((p) => `<option value="${p.id}">${p.name} · ${p.role}</option>`).join("")}</select></div>
+      ${input("title", "Название задачи", "text", true, preset.title || "")}
+      <div class="form-row"><label>Проект</label><select name="projectId" id="event-project-select" class="select"><option value="">Без проекта</option>${state.projects.map((p) => `<option value="${p.id}" ${p.id === presetProjectId ? "selected" : ""}>${p.title}</option>`).join("")}</select></div>
+      <div class="form-row"><label>Исполнитель</label><select name="performerId" id="event-performer-select" class="select"><option value="">Не назначен</option>${state.performers.map((p) => `<option value="${p.id}" ${preset.performerId === p.id ? "selected" : ""}>${p.name} · ${p.role}</option>`).join("")}</select></div>
       ${input("date", "Дата", "date", true, date)}
-      ${input("start", "Начало", "time", true, "10:00")}
-      ${input("end", "Окончание", "time", true, "13:00")}
-      <div class="form-row"><label>Статус</label><select name="status" class="select"><option>Запланировано</option><option>В работе</option><option>Готово</option></select></div>
-      <div class="form-row"><label>Приоритет</label><select name="priority" class="select"><option>Средний</option><option>Высокий</option><option>Низкий</option></select></div>
-      <div class="form-row"><label>Тип</label><select name="type" class="select"><option value="task">Задача</option><option value="meeting">Встреча</option><option value="shoot">Съёмка</option><option value="deadline">Дедлайн</option></select></div>
-      <div class="form-row form-row--wide"><label>Описание</label><textarea name="description" class="textarea"></textarea></div>
-      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить событие</button></div>
-    </form>`);
-  byId("event-form").addEventListener("submit", (event) => {
+      ${input("start", "Начало", "time", true, preset.start || "10:00")}
+      ${input("end", "Окончание", "time", true, preset.end || "13:00")}
+      <div class="form-row form-row--wide">
+        <label class="check-row">
+          <input type="checkbox" name="allDay" id="event-all-day">
+          <span>Задача на весь день</span>
+        </label>
+      </div>
+      <div class="form-row"><label>Статус</label><select name="status" class="select"><option ${!preset.status || preset.status === "Запланировано" ? "selected" : ""}>Запланировано</option><option ${preset.status === "В работе" ? "selected" : ""}>В работе</option><option ${preset.status === "Готово" ? "selected" : ""}>Готово</option></select></div>
+      <div class="form-row"><label>Приоритет</label><select name="priority" class="select"><option ${!preset.priority || preset.priority === "Средний" ? "selected" : ""}>Средний</option><option ${preset.priority === "Высокий" ? "selected" : ""}>Высокий</option><option ${preset.priority === "Низкий" ? "selected" : ""}>Низкий</option></select></div>
+      <div class="form-row"><label>Тип</label><select name="type" class="select"><option value="task" ${!preset.type || preset.type === "task" ? "selected" : ""}>Задача</option><option value="meeting" ${preset.type === "meeting" ? "selected" : ""}>Встреча</option><option value="shoot" ${preset.type === "shoot" ? "selected" : ""}>Съёмка</option><option value="deadline" ${preset.type === "deadline" ? "selected" : ""}>Дедлайн</option></select></div>
+      <div class="form-row form-row--wide"><label>Описание</label><textarea name="description" class="textarea">${preset.description || ""}</textarea></div>
+      <div class="form-row form-row--wide inline-actions"><button class="btn btn--green">Сохранить событие</button><button class="btn" type="button" data-close-modal>${(preset.returnToProjectId || preset.editEventId) ? "Закрыть" : "Отменить"}</button></div>
+    </form>`, (preset.returnToProjectId || preset.editEventId) ? {
+    backAction: () => {
+      if (preset.editEventId) {
+        openEventDetails(preset.editEventId, preset.sourceProjectId || preset.returnToProjectId || "", preset.sourceProjectScrollTop || 0);
+        return;
+      }
+      if (preset.returnToProjectId) openProjectDetails(preset.returnToProjectId, { scrollTop: preset.sourceProjectScrollTop || 0 });
+    }
+  } : {});
+  const allDayToggle = byId("event-all-day");
+  const startField = document.querySelector('#event-form input[name="start"]');
+  const endField = document.querySelector('#event-form input[name="end"]');
+  const projectSelect = byId("event-project-select");
+  const performerSelect = byId("event-performer-select");
+  const eventForm = byId("event-form");
+  allDayToggle.checked = Boolean(preset.allDay);
+  const syncEventPerformers = () => {
+    const selectedProject = projectById(projectSelect.value);
+    const allowed = new Set(selectedProject?.performers || state.performers.map((performer) => performer.id));
+    [...performerSelect.options].forEach((option) => {
+      if (!option.value) return;
+      option.hidden = projectSelect.value ? !allowed.has(option.value) : false;
+    });
+    if (projectSelect.value && performerSelect.value && !allowed.has(performerSelect.value)) performerSelect.value = "";
+  };
+  setupTimePairSync(eventForm, "start", "end", 60);
+  const syncAllDayFields = () => {
+    const disabled = allDayToggle.checked;
+    startField.disabled = disabled;
+    endField.disabled = disabled;
+    if (disabled) {
+      startField.value = "00:00";
+      endField.value = "23:59";
+    } else if (startField.value === "00:00" && endField.value === "23:59") {
+      startField.value = "10:00";
+      endField.value = "13:00";
+    }
+  };
+  projectSelect.addEventListener("change", syncEventPerformers);
+  syncEventPerformers();
+  allDayToggle.addEventListener("change", syncAllDayFields);
+  syncAllDayFields();
+  eventForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    state.events.push({ id: uid("ev"), title: data.title, description: data.description, startDateTime: `${data.date}T${data.start}`, endDateTime: `${data.date}T${data.end}`, projectId: data.projectId, performerId: data.performerId, status: data.status, priority: data.priority, type: data.type });
-    saveState();
+    const isAllDay = data.allDay === "on";
+    const startTime = isAllDay ? "00:00" : data.start;
+    const endTime = isAllDay ? "23:59" : data.end;
+    const nextEvent = { title: data.title, description: data.description, startDateTime: `${data.date}T${startTime}`, endDateTime: `${data.date}T${endTime}`, allDay: isAllDay, projectId: data.projectId, performerId: data.performerId, status: data.status, priority: data.priority, type: data.type };
+    if (isEdit) saveCalendarEventUpdate(preset.editEventId, nextEvent);
+    else {
+      state.events.push({ id: uid("ev"), ...nextEvent });
+      saveState();
+    }
+    if (preset.returnToProjectId) {
+      openProjectDetails(preset.returnToProjectId, { scrollTop: preset.sourceProjectScrollTop || 0 });
+      return;
+    }
+    if (preset.editEventId) {
+      rerenderCurrentPage();
+      openEventDetails(preset.editEventId, preset.sourceProjectId || "", preset.sourceProjectScrollTop || 0);
+      return;
+    }
     closeModal();
-    renderCalendar();
+    if (document.body.dataset.page === "calendar") renderCalendar();
+    else rerenderCurrentPage();
+  });
+}
+function openProjectTaskForm(projectId) {
+  const project = projectById(projectId);
+  openEventForm(project?.draftDeadline || project?.startDate || localISODate(), {
+    projectId,
+    type: "task",
+    status: "Запланировано",
+    priority: "Средний",
+    returnToProjectId: projectId,
+    sourceProjectId: projectId,
+    sourceProjectScrollTop: currentModalScrollTop()
   });
 }
 
 function renderMapPage() {
   byId("map-status").innerHTML = `<option value="">Все статусы</option>${[...new Set(state.projects.map((p) => p.status))].map((status) => `<option>${status}</option>`).join("")}`;
+  setupDatePairSync(document, "map-date-start", "map-date-end");
   ["map-period", "map-date-start", "map-date-end", "map-status"].forEach((id) => {
     const control = byId(id);
     control.addEventListener("input", renderMapMarkers);
@@ -1220,6 +2195,47 @@ function downloadMapPng() {
 function input(name, label, type = "text", required = false, value = "") {
   return `<div class="form-row"><label>${label}</label><input name="${name}" class="input" type="${type}" value="${value ?? ""}" ${required ? "required" : ""}></div>`;
 }
+function addDaysToISO(value, days = 0) {
+  if (!value) return "";
+  const date = new Date(`${value}T12:00:00`);
+  date.setDate(date.getDate() + days);
+  return localISODate(date);
+}
+function setupDatePairSync(root, startName, endName, options = {}) {
+  const start = root?.querySelector(`[name="${startName}"]`);
+  const end = root?.querySelector(`[name="${endName}"]`);
+  if (!start || !end) return;
+  const offset = Number(options.offsetDays || 0);
+  const sync = () => {
+    if (!start.value) return;
+    const next = addDaysToISO(start.value, offset);
+    end.min = start.value;
+    if (!end.value || end.value < start.value) {
+      end.value = next;
+      end.dispatchEvent(new Event("input", { bubbles: true }));
+      end.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  };
+  start.addEventListener("change", sync);
+  start.addEventListener("input", sync);
+  sync();
+}
+function setupTimePairSync(root, startName = "start", endName = "end", minutes = 60) {
+  const start = root?.querySelector(`[name="${startName}"]`);
+  const end = root?.querySelector(`[name="${endName}"]`);
+  if (!start || !end) return;
+  const sync = () => {
+    if (!start.value) return;
+    const [hours, mins] = start.value.split(":").map(Number);
+    const total = Math.min(23 * 60 + 59, hours * 60 + mins + minutes);
+    const next = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+    if (!end.value || end.value <= start.value) end.value = next;
+    end.min = start.value;
+  };
+  start.addEventListener("change", sync);
+  start.addEventListener("input", sync);
+  sync();
+}
 function renderChat(root, messages, onSend) {
   if (!root) return;
   root.innerHTML = `
@@ -1250,19 +2266,125 @@ function upcomingProjectDeadlines() {
 function exportDataset(type) {
   hydrateDerivedData();
   const datasets = {
-    performers: state.performers,
-    projects: state.projects.map((p) => ({ ...p, performers: p.performers.map((id) => performerById(id)?.name).join(", "), expensesTotal: projectExpenses(p), profit: p.profit, margin: p.clientPayment ? Math.round(p.profit / p.clientPayment * 100) : 0 })),
-    finances: state.projects.map((p) => ({ project: p.title, client: p.client, income: p.clientPayment, expenses: projectExpenses(p), profit: p.profit })),
-    expenses: allExpenses().map((e) => ({ ...e, project: projectById(e.projectId)?.title || "Без проекта" })),
-    documents: state.documents.map((d) => ({ ...d, project: projectById(d.projectId)?.title || "Без проекта" })),
-    equipment: state.projects.flatMap((p) => (p.equipment || []).map((e) => ({ project: p.title, ...e }))),
-    map: mapPoints()
+    performers: {
+      sheet: "Исполнители",
+      rows: state.performers.map((performer) => ({
+        "ID": performer.id,
+        "Имя": performer.name,
+        "Роль": performer.role,
+        "Email": performer.email,
+        "Пароль": performer.password,
+        "Ставка": performer.rate,
+        "Проектов в работе": performer.activeProjectsCount,
+        "Завершённых проектов": performer.completedProjectsCount,
+        "Ближайший дедлайн": performer.nearestDeadline,
+        "Статус": performer.status,
+        "Контакты": performer.contacts,
+        "Заметка": performer.notes || ""
+      }))
+    },
+    projects: {
+      sheet: "Проекты",
+      rows: state.projects.map((project) => ({
+        "ID": project.id,
+        "Название проекта": project.title,
+        "Клиент": project.client,
+        "Описание": project.description,
+        "Статус": project.status,
+        "Дата начала": project.startDate,
+        "Дедлайн черновика": project.draftDeadline,
+        "Дедлайн чистовика": project.finalDeadline,
+        "Съёмочные даты": (project.shootingDates || []).map((date) => `${date.start} - ${date.end}`).join("; "),
+        "Локация": project.location,
+        "Координаты": (project.coordinates || []).join(", "),
+        "Исполнители": project.performers.map((id) => performerById(id)?.name).join(", "),
+        "Согласованный бюджет": project.clientPayment,
+        "Получено оплат": projectIncome(project),
+        "График оплат": (project.payments || []).map((payment) => `${payment.date} · ${payment.method} · ${payment.amount}`).join("; "),
+        "Расходы": projectExpenses(project),
+        "Прибыль": project.profit,
+        "Маржинальность, %": projectMargin(project),
+        "Архивирован": isArchivedProject(project) ? "Да" : "Нет"
+      }))
+    },
+    finances: {
+      sheet: "Финансы",
+      rows: state.projects.map((project) => ({
+        "Проект": project.title,
+        "Клиент": project.client,
+        "Бюджет": project.clientPayment,
+        "Получено": projectIncome(project),
+        "Расходы": projectExpenses(project),
+        "Прибыль": project.profit,
+        "Маржинальность, %": projectMargin(project)
+      }))
+    },
+    expenses: {
+      sheet: "Расходы",
+      rows: allExpenses().map((expense) => ({
+        "ID": expense.id,
+        "Тип": expense.type === "general" ? "Общая трата" : expense.type === "equipment" ? "Аренда техники" : "Проектная трата",
+        "Проект": projectById(expense.projectId)?.title || "Без проекта",
+        "Категория": expense.category,
+        "Название": expense.title,
+        "Сумма": expense.amount,
+        "Дата начисления": expense.date,
+        "Дата выплаты": expense.paidAt,
+        "Способ оплаты": expense.paymentMethod,
+        "Комментарий": expense.comment,
+        "Чек / документ": expense.receiptFile || ""
+      }))
+    },
+    documents: {
+      sheet: "Документы",
+      rows: state.documents.map((documentItem) => ({
+        "ID": documentItem.id,
+        "Тип документа": documentItem.type,
+        "Проект": projectById(documentItem.projectId)?.title || "Без проекта",
+        "Название": documentItem.title,
+        "Сумма": documentItem.amount,
+        "Дата": documentItem.date,
+        "PDF-файл": documentItem.pdfFile || "",
+        "Чек": documentItem.receiptFile || "",
+        "Ссылка Мой налог": documentItem.myTaxLink || "",
+        "Комментарий": documentItem.comment || ""
+      }))
+    },
+    equipment: {
+      sheet: "Оборудование",
+      rows: state.projects.flatMap((project) => (project.equipment || []).map((equipment) => ({
+        "Проект": project.title,
+        "ID": equipment.id,
+        "Название": equipment.name,
+        "Категория": equipment.category,
+        "Количество": equipment.quantity,
+        "Цена за единицу": equipment.pricePerUnit,
+        "Дней аренды": equipment.rentalDays,
+        "Итоговая стоимость": equipment.totalPrice,
+        "Чек / договор": equipment.receiptFile || ""
+      })))
+    },
+    map: {
+      sheet: "Карта",
+      rows: mapPoints().map((point) => ({
+        "ID": point.id,
+        "Проект": point.title,
+        "Клиент": point.client,
+        "Локация": point.location,
+        "Координаты": point.coordinates.join(", "),
+        "Начало съёмок": point.shootingDateStart,
+        "Конец съёмок": point.shootingDateEnd,
+        "Съёмочных дней": point.shootingDaysCount,
+        "Статус": point.status
+      }))
+    }
   };
-  const data = datasets[type] || [];
+  const dataset = datasets[type] || { sheet: type, rows: [] };
+  const data = dataset.rows;
   if (window.XLSX) {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, type);
+    XLSX.utils.book_append_sheet(workbook, worksheet, dataset.sheet);
     XLSX.writeFile(workbook, `${type}.xlsx`);
     return;
   }
@@ -1285,7 +2407,17 @@ function rerenderCurrentPage() {
 window.openPerformerDetails = openPerformerDetails;
 window.openProjectDetails = openProjectDetails;
 window.openProjectForm = openProjectForm;
+window.removeProjectPerformer = removeProjectPerformer;
+window.openProjectPaymentEdit = openProjectPaymentEdit;
+window.openProjectExpenseEdit = openProjectExpenseEdit;
+window.openProjectEquipmentEdit = openProjectEquipmentEdit;
 window.archiveProject = archiveProject;
 window.restoreProject = restoreProject;
+window.openCalendarDay = openCalendarDay;
+window.openEventFromDayGrid = openEventFromDayGrid;
 window.openEventForm = openEventForm;
 window.openEventDetails = openEventDetails;
+window.openEventEditForm = openEventEditForm;
+window.markEventDone = markEventDone;
+window.openProjectTaskForm = openProjectTaskForm;
+window.openCalendarPerformerAssign = openCalendarPerformerAssign;

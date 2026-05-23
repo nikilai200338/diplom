@@ -33,7 +33,7 @@
   <main class="app-shell">
     <section class="hero">
       <div>
-        <h1>Рабочий центр видеопроизводства</h1>
+        <h1>Voskresensky Studio</h1>
         <p>Проекты, исполнители, дедлайны, финансы, документы, карта съёмок и общий чат в одном интерфейсе.</p>
         <div class="hero-actions">
           <button class="btn btn--green" data-action="open-project-create">Добавить проект</button>
@@ -61,8 +61,14 @@
         <div class="grid grid--2">
           <div class="panel">
             <div class="section-head">
-              <h2 class="section-title">Ближайшие задачи</h2>
-              <a class="btn btn--ghost" href="calendar.html">Календарь</a>
+              <div>
+                <h2 class="section-title">Ближайшие задачи</h2>
+                <p class="section-note">Можно открыть задачу, посмотреть детали и сразу назначить новую на исполнителя.</p>
+              </div>
+              <div class="inline-actions">
+                <button class="btn btn--green" data-action="open-event-create">Добавить задачу</button>
+                <a class="btn btn--ghost" href="calendar.html">Календарь</a>
+              </div>
             </div>
             <div id="dashboard-events" class="list"></div>
           </div>

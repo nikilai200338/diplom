@@ -51,6 +51,12 @@
       <div class="panel">
         <div class="section-head">
           <h2 class="section-title">Динамика доходов и расходов</h2>
+          <div class="range-switch" aria-label="Период графика финансов">
+            <button class="range-switch__btn" data-finance-period="2m">2 месяца</button>
+            <button class="range-switch__btn active" data-finance-period="6m">Полгода</button>
+            <button class="range-switch__btn" data-finance-period="1y">Год</button>
+            <button class="range-switch__btn" data-finance-period="all">Несколько лет</button>
+          </div>
         </div>
         <canvas id="finance-line" class="finance-chart"></canvas>
       </div>
