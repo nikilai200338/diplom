@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voskresensky Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="img/favicon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+
+<style>
+img[src="img/favicon.svg"], img[src="img/heroIllustration.svg"] { display:none !important; }
+.header__nav::before, .logo::before {
+  content: "VS";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #191A23;
+  color: #B9FF66;
+  font-weight: 700;
+  margin-right: 12px;
+}
+</style>
+
+</head>
+<body>
+
+<header class="header">
+  <div class="header__container">
+    <nav class="header__nav">
+      <img src="img/favicon.svg" alt="" width="36" height="36">
+      <ul class="header__list">
+        <li class="header__list-item active"><a class="header__list-link" href="index.html">Главная</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="performers.html">Исполнители</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="calendar.html">Календарь</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="projects-page.html">Проекты</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="finances.html">Финансы</a></li>
+        <li class="header__list-item"><a class="header__list-link" href="map.html">Карта</a></li>
+      </ul>
+      <a class="header__button">Сменить аккаунт</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="hero__container">
+      <div class="hero__content">
+        <h1 class="hero__title" id="hero-title">Добро пожаловать!</h1>
+        <p class="hero__subtitle">Сегодня <strong id="today-date"></strong> — вот что важно прямо сейчас.</p>
+        <button class="hero__button" onclick="window.location.href='projects-page.html'">Открыть проекты</button>
+      </div>
+      <div class="hero__image">
+        <img src="img/hero_Illustration.svg" alt="" onerror="this.style.display='none'">
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard">
+    <div class="dashboard__container">
+
+      <!-- KPI -->
+      <div>
+        <span class="section-label">📊 Обзор</span>
+        <div class="kpi-row" id="kpi-row">
+          <div class="kpi-card"><div class="kpi-card__icon">🎬</div><div class="kpi-card__value">…</div><div class="kpi-card__label">Загрузка…</div></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card__title">⏳ Ближайшие дедлайны</div>
+          <div class="deadline-list" id="deadline-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">✅ Задачи на сегодня</div>
+          <div class="task-list" id="task-list"></div>
+          <div class="task-add">
+            <input type="text" id="new-task-input" placeholder="Добавить задачу..." onkeydown="if(event.key==='Enter') addTask()">
+            <button onclick="addTask()">+ Добавить</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="section-label">⚡ Быстрые действия</span>
+        <div class="quick-actions">
+          <a class="qa-btn" href="projects-page.html"><span class="qa-btn__icon">🎬</span>Новый проект</a>
+          <a class="qa-btn" href="performers.html"><span class="qa-btn__icon">👤</span>Добавить исполнителя</a>
+          <a class="qa-btn" href="finances.html"><span class="qa-btn__icon">🧾</span>Выставить счёт</a>
+          <a class="qa-btn" href="calendar.html"><span class="qa-btn__icon">📅</span>Запланировать съёмку</a>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card__title">📅 Ближайшие события</div>
+          <div class="mini-cal" id="events-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">💰 Финансы текущего месяца</div>
+          <div id="finance-block"></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card__title">👥 Команда</div>
+          <div class="performer-grid" id="team-grid"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">📝 Заметки</div>
+          <textarea class="notes-area" id="notes-area" placeholder="Запишите мысли, идеи, правки от клиентов..."></textarea>
+          <button class="notes-save" onclick="saveNotes()">Сохранить</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__title">💬 Чат с командой</div>
+        <div class="chat-wrapper">
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">Отправить</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+
+
+
+<script>
+Auth.requireLogin();
+
+const user = Auth.getUser();
+
+// ── Дата и приветствие ──
+const now = new Date();
+document.getElementById('today-date').textContent = now.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long' });
+const firstName = (user?.full_name || '').split(/\s+/)[0] || 'Гость';
+document.getElementById('hero-title').textContent = `${firstName}, добро пожаловать!`;
+
+// ── KPI ──
+function renderKPI(k) {
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-card__icon">🎬</div>
+      <div class="kpi-card__value">${k.active_projects}</div>
+      <div class="kpi-card__label">Активных проектов</div>
+      <span class="kpi-card__badge">+${k.new_this_month} за месяц</span>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon">⏰</div>
+      <div class="kpi-card__value">${k.deadlines_week}</div>
+      <div class="kpi-card__label">Дедлайнов на этой неделе</div>
+      <span class="kpi-card__badge ${k.deadlines_week>0?'warn':''}">${k.deadlines_week>0?'Срочно':'Спокойно'}</span>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon">💰</div>
+      <div class="kpi-card__value">${UI.money(k.income_month).replace(' ₽','₽')}</div>
+      <div class="kpi-card__label">Доход в этом месяце</div>
+      <span class="kpi-card__badge">${k.plan_percent}% от плана</span>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon">👥</div>
+      <div class="kpi-card__value">${k.performers_active}</div>
+      <div class="kpi-card__label">Исполнителей в работе</div>
+      <span class="kpi-card__badge ${k.performers_pause>0?'danger':''}">${k.performers_pause} на паузе</span>
+    </div>
+  `;
+}
+
+// ── Дедлайны ──
+function renderDeadlines(list) {
+  const cont = document.getElementById('deadline-list');
+  if (!list.length) { cont.innerHTML = '<p style="color:rgba(25,26,35,.5);padding:8px 0">Нет ближайших дедлайнов</p>'; return; }
+  const today = new Date();
+  cont.innerHTML = list.map(p => {
+    const d = new Date(p.deadline);
+    const days = Math.ceil((d - today)/86400000);
+    const cls = days <= 3 ? 'urgent' : days <= 7 ? 'soon' : '';
+    return `
+      <div class="deadline-item">
+        <div>
+          <div class="deadline-item__name">${p.name}</div>
+          <div class="deadline-item__client">Клиент: ${p.client}</div>
+        </div>
+        <span class="deadline-item__date ${cls}">${UI.dateShort(p.deadline)}</span>
+      </div>`;
+  }).join('');
+}
+
+// ── Задачи ──
+let todayTasks = [];
+function renderTasks() {
+  const cont = document.getElementById('task-list');
+  if (!todayTasks.length) { cont.innerHTML = '<p style="color:rgba(25,26,35,.5);padding:8px 0">Задач на сегодня нет</p>'; return; }
+  const tagLabels = { client:'Клиент', edit:'Монтаж', shoot:'Съёмка', green:'Проект', dark:'Дедлайн', accent:'Встреча', grey:'Личное' };
+  const tagClass  = { client:'tag-client', edit:'tag-edit', shoot:'tag-shoot' };
+  cont.innerHTML = todayTasks.map(t => `
+    <label class="task-item">
+      <input type="checkbox" ${t.done?'checked':''} data-task-id="${t.id}">
+      <span class="task-item__text" style="${t.done?'text-decoration:line-through;opacity:.6':''}">${t.title}</span>
+      ${tagLabels[t.tag] ? `<span class="task-item__tag ${tagClass[t.tag]||'tag-client'}">${tagLabels[t.tag]}</span>` : ''}
+    </label>
+  `).join('');
+  cont.querySelectorAll('input[data-task-id]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const id = +cb.dataset.taskId;
+      try { await api.tasks.update(id, { done: cb.checked }); load(); }
+      catch (e) { UI.showError(e); cb.checked = !cb.checked; }
+    });
+  });
+}
+
+async function addTask() {
+  const input = document.getElementById('new-task-input');
+  const text = input.value.trim();
+  if (!text) return;
+  try {
+    await api.tasks.create({ title: text, date: new Date().toISOString().slice(0,10), time: '12:00', tag: 'green' });
+    input.value = '';
+    load();
+  } catch (e) { UI.showError(e); }
+}
+
+// ── События ──
+function renderEvents(events) {
+  const cont = document.getElementById('events-list');
+  if (!events.length) { cont.innerHTML = '<p style="color:rgba(25,26,35,.5);padding:8px 0">Нет запланированных событий</p>'; return; }
+  cont.innerHTML = events.map(e => {
+    const d = new Date(e.date);
+    return `
+      <div class="mini-cal__event">
+        <div class="mini-cal__date">
+          <span class="mini-cal__day">${d.getDate()}</span>
+          <span class="mini-cal__month">${d.toLocaleDateString('ru-RU',{month:'short'}).replace('.','')}</span>
+        </div>
+        <div class="mini-cal__info">
+          <div class="mini-cal__event-name">${e.title}</div>
+          <div class="mini-cal__event-sub">${e.tag || ''}</div>
+        </div>
+        <span class="mini-cal__time">${e.time || '—'}</span>
+      </div>`;
+  }).join('');
+}
+
+// ── Финансы ──
+function renderFinance(k) {
+  const pct = k.plan_percent || 0;
+  document.getElementById('finance-block').innerHTML = `
+    <div class="finance-row"><span class="finance-row__label">Доход (факт)</span><span class="finance-row__value income">${UI.money(k.income_month)}</span></div>
+    <div class="finance-row"><span class="finance-row__label">Доход (план)</span><span class="finance-row__value">${UI.money(k.plan_month)}</span></div>
+    <div class="finance-row"><span class="finance-row__label">Расходы</span><span class="finance-row__value expense">−${UI.money(k.expense_month)}</span></div>
+    <div class="finance-row"><span class="finance-row__label">Прибыль</span><span class="finance-row__value income">${UI.money(k.profit_month)}</span></div>
+    <div class="finance-bar"><div class="finance-bar__fill" style="width:${Math.min(pct,100)}%;"></div></div>
+    <div class="finance-bar__label">${pct}% от плана выполнено</div>
+  `;
+}
+
+// ── Команда ──
+function renderTeam(team) {
+  const statusCls = { active:'online', pause:'busy', done:'' };
+  document.getElementById('team-grid').innerHTML = team.map(p => `
+    <div class="performer-chip">
+      <div class="performer-chip__avatar" style="background:${p.avatar_bg};color:${p.avatar_fg}">${UI.initials(p.full_name)}</div>
+      <div>
+        <div class="performer-chip__name">${p.full_name}</div>
+        <div class="performer-chip__role">${p.role}</div>
+      </div>
+      <div class="performer-chip__status ${statusCls[p.status]||''}"></div>
+    </div>
+  `).join('');
+}
+
+// ── Заметки ──
+async function loadNotes() {
+  try {
+    const { content } = await api.notes.get();
+    document.getElementById('notes-area').value = content;
+  } catch (e) {}
+}
+async function saveNotes() {
+  const btn = document.querySelector('.notes-save');
+  try {
+    await api.notes.save(document.getElementById('notes-area').value);
+    btn.textContent = 'Сохранено ✓';
+    setTimeout(() => btn.textContent = 'Сохранить', 1500);
+  } catch (e) { UI.showError(e); }
+}
+
+// ── Чат команды ──
+async function loadChat() {
+  try {
+    const msgs = await api.messages.list();
+    const cont = document.getElementById('chat-messages');
+    cont.innerHTML = msgs.map(m => {
+      const isMe = m.user_id === user.id;
+      return `
+        <div class="msg ${isMe?'msg--me':''}">
+          <div class="msg__avatar">${m.initials}</div>
+          <div>
+            <div class="msg__bubble">${escapeHtml(m.text)}</div>
+            <div class="msg__meta">${isMe?'Вы':m.author_name} · ${m.time}</div>
+          </div>
+        </div>`;
+    }).join('');
+    cont.scrollTop = cont.scrollHeight;
+  } catch (e) { UI.showError(e); }
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  try {
+    await api.messages.send(text);
+    input.value = '';
+    loadChat();
+  } catch (e) { UI.showError(e); }
+}
+
+// ── Главная загрузка ──
+async function load() {
+  try {
+    const data = await api.dashboard.get();
+    renderKPI(data.kpi);
+    renderDeadlines(data.deadlines);
+    todayTasks = data.tasks; renderTasks();
+    renderEvents(data.events);
+    renderFinance(data.kpi);
+    renderTeam(data.team);
+  } catch (e) { UI.showError(e); }
+}
+
+UI.bindLogoutLinks();
+load();
+loadNotes();
+loadChat();
+// Автообновление чата каждые 30 сек
+setInterval(loadChat, 30000);
+</script>
+
+
+<script>
+(function(){
+  const DB = {
+    user: { id: 1, fullname: 'Илья Воскресенский', role: 'admin', initials: 'ИВ' },
+    notes: 'Идеи на сегодня: проверить дедлайны, обновить таблицу финансов, созвониться с монтажёром.',
+    messages: [
+      { id: 1, userId: 2, authorName: 'Анна', initials: 'А', text: 'Превью для клиента готово.', time: '10:15' },
+      { id: 2, userId: 1, authorName: 'Илья', initials: 'ИВ', text: 'Отлично, вечером отправлю правки.', time: '10:32' }
+    ],
+    performers: [
+      { id: 1, fullname: 'Анна Лебедева', role: 'Монтажёр', status: 'active', phone: '+7 999 111-22-33', email: 'anna@example.com', rate: 7000, avatarBg: '#B9FF66', avatarFg: '#191A23', tasksCount: 4, projectsCount: 2, progress: 72, nearestDeadline: new Date(Date.now()+86400000).toISOString(), avatarbg: '#B9FF66', avatarfg: '#191A23', taskscount: 4, projectscount: 2, nearestdeadline: new Date(Date.now()+86400000).toISOString() },
+      { id: 2, fullname: 'Кирилл Смирнов', role: 'Оператор', status: 'pause', phone: '+7 999 111-22-34', email: 'kirill@example.com', rate: 6000, avatarBg: '#191A23', avatarFg: '#B9FF66', tasksCount: 2, projectsCount: 1, progress: 38, nearestDeadline: new Date(Date.now()+3*86400000).toISOString(), avatarbg: '#191A23', avatarfg: '#B9FF66', taskscount: 2, projectscount: 1, nearestdeadline: new Date(Date.now()+3*86400000).toISOString() },
+      { id: 3, fullname: 'Мария Орлова', role: 'Колорист', status: 'done', phone: '+7 999 111-22-35', email: 'maria@example.com', rate: 8000, avatarBg: '#4A90D9', avatarFg: '#fff', tasksCount: 1, projectsCount: 1, progress: 100, nearestDeadline: new Date(Date.now()+7*86400000).toISOString(), avatarbg: '#4A90D9', avatarfg: '#fff', taskscount: 1, projectscount: 1, nearestdeadline: new Date(Date.now()+7*86400000).toISOString() }
+    ],
+    projects: [
+      { id: 1, name: 'YouTube-пилот BMW F56', client: 'AutoDaily', deadline: new Date(Date.now()+2*86400000).toISOString(), status: 'active' },
+      { id: 2, name: 'Политический выпуск', client: 'YouTube', deadline: new Date(Date.now()+5*86400000).toISOString(), status: 'active' },
+      { id: 3, name: 'Реклама сервиса', client: 'Mini Club', deadline: new Date(Date.now()+9*86400000).toISOString(), status: 'preproduction' }
+    ],
+    tasks: [
+      { id: 1, title: 'Собрать B-roll', date: new Date().toISOString().slice(0,10), time: '10:00', tag: 'shoot', done: false },
+      { id: 2, title: 'Отправить смету', date: new Date().toISOString().slice(0,10), time: '12:00', tag: 'client', done: false },
+      { id: 3, title: 'Черновой монтаж', date: new Date(Date.now()+86400000).toISOString().slice(0,10), time: '15:00', tag: 'edit', done: true },
+      { id: 4, title: 'Подготовить титры', date: new Date().toISOString().slice(0,10), time: '17:30', tag: 'green', done: false }
+    ],
+    events: [
+      { id: 1, title: 'Созвон с клиентом', date: new Date().toISOString().slice(0,10), time: '18:00', tag: 'client' },
+      { id: 2, title: 'Съёмка walkaround', date: new Date(Date.now()+86400000).toISOString().slice(0,10), time: '11:00', tag: 'shoot' },
+      { id: 3, title: 'Монтажный слот', date: new Date(Date.now()+2*86400000).toISOString().slice(0,10), time: '14:00', tag: 'edit' }
+    ],
+    transactions: [
+      { id: 1, date: new Date().toISOString().slice(0,10), description: 'Оплата ролика BMW', category: 'income', projectId: 1, projectName: 'YouTube-пилот BMW F56', projectname: 'YouTube-пилот BMW F56', amount: 65000, type: 'income', note: '' },
+      { id: 2, date: new Date().toISOString().slice(0,10), description: 'Гонорар монтажёра', category: 'team', projectId: 1, projectName: 'YouTube-пилот BMW F56', projectname: 'YouTube-пилот BMW F56', amount: 12000, type: 'expense', note: '' },
+      { id: 3, date: new Date(Date.now()-10*86400000).toISOString().slice(0,10), description: 'Бензин на съёмку', category: 'transport', projectId: 2, projectName: 'Политический выпуск', projectname: 'Политический выпуск', amount: 3500, type: 'expense', note: '' },
+      { id: 4, date: new Date(Date.now()-20*86400000).toISOString().slice(0,10), description: 'Рекламная интеграция', category: 'income', projectId: 2, projectName: 'Политический выпуск', projectname: 'Политический выпуск', amount: 42000, type: 'income', note: '' },
+      { id: 5, date: new Date(Date.now()-5*86400000).toISOString().slice(0,10), description: 'Подписка на софт', category: 'software', projectId: null, projectName: '', projectname: '', amount: 1900, type: 'expense', note: '' }
+    ],
+    budgets: [
+      { category: 'team', monthlyLimit: 40000, monthlylimit: 40000 },
+      { category: 'transport', monthlyLimit: 15000, monthlylimit: 15000 },
+      { category: 'software', monthlyLimit: 10000, monthlylimit: 10000 },
+      { category: 'equipment', monthlyLimit: 30000, monthlylimit: 30000 }
+    ]
+  };
+
+  const clone = (v) => JSON.parse(JSON.stringify(v));
+  const delay = (v) => Promise.resolve(clone(v));
+  const nextId = (arr) => arr.length ? Math.max(...arr.map(x => Number(x.id)||0)) + 1 : 1;
+
+  window.Auth = {
+    requireLogin(){ return true; },
+    getUser(){ return clone(DB.user); },
+    isAuthenticated(){ return true; },
+    save(){},
+    logout(){ location.href = 'login.html'; }
+  };
+
+  window.UI = {
+    money(v){ return Number(v||0).toLocaleString('ru-RU') + ' ₽'; },
+    dateShort(v){ return new Date(v).toLocaleDateString('ru-RU', { day:'2-digit', month:'short' }).replace('.', ''); },
+    initials(name){ return String(name||'').split(/\s+/).map(s=>s[0]||'').slice(0,2).join('').toUpperCase(); },
+    bindLogoutLinks(){ document.querySelectorAll('[data-logout]').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); Auth.logout(); })); },
+    toast(msg){ alert(msg); },
+    showError(err){ console.error(err); alert(typeof err === 'string' ? err : (err && err.message) || 'Ошибка'); }
+  };
+
+  function filterByRange(items, from, to, key='date'){
+    return items.filter(i => (!from || i[key] >= from) && (!to || i[key] <= to));
+  }
+
+  function monthlySummary(transactions){
+    const map = new Map();
+    transactions.forEach(t => {
+      const m = t.date.slice(0,7);
+      if(!map.has(m)) map.set(m, { month:m, income:0, expense:0 });
+      const row = map.get(m);
+      if(t.type === 'income') row.income += Number(t.amount||0);
+      else row.expense += Number(t.amount||0);
+    });
+    return [...map.values()].sort((a,b)=>a.month.localeCompare(b.month));
+  }
+
+  function txSummary(from, to){
+    const list = filterByRange(DB.transactions, from, to);
+    const income = list.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount||0),0);
+    const expense = list.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount||0),0);
+    const byCat = {};
+    list.filter(t=>t.type==='expense').forEach(t => { byCat[t.category] = (byCat[t.category]||0) + Number(t.amount||0); });
+    return {
+      balance: income - expense,
+      income,
+      expense,
+      monthly: monthlySummary(DB.transactions),
+      byCategory: Object.entries(byCat).map(([category,total])=>({ category, total }))
+    };
+  }
+
+  window.api = {
+    auth: { async login(){ return { token: 'demo-token', user: clone(DB.user) }; } },
+    dashboard: {
+      async get(){
+        const s = txSummary(null, null);
+        return delay({
+          kpi: {
+            activeProjects: DB.projects.filter(p=>p.status==='active').length,
+            newThisMonth: 2,
+            deadlinesWeek: DB.projects.filter(p => (new Date(p.deadline)-new Date())/86400000 <= 7).length,
+            incomeMonth: s.income,
+            expenseMonth: s.expense,
+            profitMonth: s.balance,
+            performersActive: DB.performers.filter(p=>p.status==='active').length,
+            performersPause: DB.performers.filter(p=>p.status==='pause').length,
+            planMonth: 120000,
+            planPercent: Math.round((s.income / 120000) * 100)
+          },
+          deadlines: DB.projects.map(p=>({ name:p.name, client:p.client, deadline:p.deadline })),
+          tasks: DB.tasks.filter(t=>t.date===new Date().toISOString().slice(0,10)),
+          events: DB.events.slice(0,5),
+          team: DB.performers
+        });
+      }
+    },
+    tasks: {
+      async list(qs=''){ const p = new URLSearchParams(qs); return delay(filterByRange(DB.tasks, p.get('from'), p.get('to'))); },
+      async create(payload){ const item = { id: nextId(DB.tasks), done:false, ...payload }; DB.tasks.push(item); return delay(item); },
+      async update(id, patch){ const t = DB.tasks.find(x=>String(x.id)===String(id)); if (t) Object.assign(t, patch); return delay(t); },
+      async remove(id){ DB.tasks = DB.tasks.filter(x=>String(x.id)!==String(id)); return delay(true); }
+    },
+    notes: { async get(){ return delay(DB.notes); }, async save(v){ DB.notes = String(v||''); return delay(true); } },
+    messages: {
+      async list(){ return delay(DB.messages); },
+      async send(text){ DB.messages.push({ id: nextId(DB.messages), userId: 1, authorName:'Илья', initials:'ИВ', text, time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) }); return delay(true); }
+    },
+    projects: { async list(){ return delay(DB.projects); } },
+    performers: {
+      async list(qs=''){
+        const p = new URLSearchParams(qs);
+        let list = [...DB.performers];
+        if (p.get('status')) list = list.filter(x=>x.status===p.get('status'));
+        if (p.get('q')) {
+          const q = p.get('q').toLowerCase();
+          list = list.filter(x => [x.fullname,x.role,x.email].join(' ').toLowerCase().includes(q));
+        }
+        return delay(list);
+      },
+      async create(payload){ const item = { id: nextId(DB.performers), progress:0, tasksCount:0, projectsCount:0, nearestDeadline:null, avatarBg:'#B9FF66', avatarFg:'#191A23', ...payload }; item.avatarbg=item.avatarBg; item.avatarfg=item.avatarFg; item.taskscount=item.tasksCount; item.projectscount=item.projectsCount; item.nearestdeadline=item.nearestDeadline; DB.performers.push(item); return delay(item); },
+      async update(id, payload){ const p = DB.performers.find(x=>String(x.id)===String(id)); if (p) Object.assign(p, payload); return delay(p); }
+    },
+    transactions: {
+      async list(qs=''){ const p = new URLSearchParams(qs); return delay(filterByRange(DB.transactions, p.get('from'), p.get('to'))); },
+      async summary(qs=''){ const p = new URLSearchParams(qs); return delay(txSummary(p.get('from'), p.get('to'))); },
+      async create(payload){ const item = { id: nextId(DB.transactions), projectname: payload.projectName || payload.projectname || '', ...payload }; DB.transactions.push(item); return delay(item); },
+      async remove(id){ DB.transactions = DB.transactions.filter(x=>String(x.id)!==String(id)); return delay(true); }
+    },
+    budgets: {
+      async list(){
+        const summary = txSummary(null,null);
+        const spent = Object.fromEntries(summary.byCategory.map(x=>[x.category, x.total]));
+        return delay(DB.budgets.map(b=>({ ...b, spent: spent[b.category] || 0, pct: Math.round(((spent[b.category]||0)/(b.monthlyLimit||1))*100) })));
+      }
+    }
+  };
+
+  window.Chart = window.Chart || function(){ return { destroy(){} }; };
+})();
+</script>
+
+</body>
+</html>
